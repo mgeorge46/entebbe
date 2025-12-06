@@ -1,0 +1,157 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Import Aircraft Components{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Component{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Clone{% endblock breadtext4 %}
+{% block content %}
+<style>
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+    .form-check label {
+        margin-left: 10px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+    .form-check .form-check-input[type=checkbox] {
+        border-radius: .25em;
+        height: 50px;
+        width: 50px;
+    }
+    .form-check .form-check-input[type=radio] {
+        border-radius: 100%;
+        height: 50px;
+        width: 50px;
+    }
+    .form-switch .form-check-input[type=checkbox] {
+        border-radius: 2em;
+        height: 50px;
+        width: 100px;
+    }
+
+    .component {
+    border: 2px solid blue; /* Blue border for each component */
+    margin: 10px;
+    padding: 10px;
+    position: relative;
+    }
+
+    .component:not(.main-component):before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    border-left: 2px solid blue; /* Vertical line */
+    height: 20px;
+    }
+
+    .component:not(.main-component):after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -20px;
+    border-top: 2px solid blue; /* Horizontal line */
+    width: 40px;
+    }
+</style>
+<link href="https://www.markuptag.com/bootstrap/5/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://www.markuptag.com/bootstrap/5/js/bootstrap.bundle.min.js"></script>
+
+
+<form action="#" class="step-form-horizontal" id="step-form-horizontal">
+    <div>
+        <h4>Type of Components to Import</h4>
+        <section>
+            <h4>Type of Components to Import</h4><br>
+
+            <table>
+                <tr>
+                    <td>
+
+
+                        <div class="mx-auto d-table mt-5">
+
+                            <div class="form-check">
+                                <input class="form-check-input" id="DefaultRadiobtn" name="flexRadioDefault"
+                                       type="radio" required> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <label class="form-check-label" for="DefaultRadiobtn">
+                                    Main Components
+                                </label>
+                            </div>
+                            <br>
+                            <div class="form-check">
+                                <input class="form-check-input" id="DefaultRadiobtn" name="flexRadioDefault"
+                                       type="radio" required> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <label class="form-check-label" for="DefaultRadiobtn">
+                                    &nbsp;&nbsp;&nbsp; Sub Components Level One
+                                </label>
+                            </div>
+                            <br>
+                            <div class="form-check">
+                                <input class="form-check-input" id="DefaultRadiobtn" name="flexRadioDefault"
+                                       type="radio" required> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <label class="form-check-label" for="DefaultRadiobtn">
+                                    &nbsp;&nbsp;&nbsp; Sub Components Level Two
+                                </label>
+                            </div>
+                            <br>
+                            <div class="form-check">
+                                <input class="form-check-input" id="DefaultRadiobtn33" name="flexRadioDefault"
+                                       type="radio" required> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <label class="form-check-label" for="DefaultRadiobtn">
+                                    &nbsp;&nbsp;&nbsp;  Sub Components Level Three
+                                </label>
+                            </div>
+                            <br>
+                        </div>
+
+
+                    </td>
+
+                    <td>
+                        <div class="component main-component">
+                            Main Component <a href="#">Main Template</a>
+                            <div class="component sub-component-one">
+                                Sub-Component Level One <a href="#">Level 1 Template</a>
+                                <div class="component sub-component-two">
+                                    Sub-Component Level Two <a href="#">Level 2 Template</a>
+                                    <div class="component sub-component-three">
+                                        Sub-Component Level Three <a href="#">Level 3 Template</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </section>
+        <h4>File Upload</h4>
+<section>
+    <form action="/your-server-endpoint" enctype="multipart/form-data" method="post">
+        <label class="form-label" for="fileUpload">Choose a file to upload:</label>
+        <input accept=".csv, text/csv" id="fileUpload" name="fileUpload" type="file" required>
+        <br>
+        <button class="btn btn-primary" type="submit">Upload File</button>
+        <button class="btn btn-secondary" type="button" id="resetFile">Cancel Upload</button>
+    </form>
+    <p class="mt-4">File Type should be CVS Format only</p>
+    <p class="mt-4">Make Sure Data follows the template standard</p>
+</section>
+        <h4>Confirmation</h4>
+        <section>
+            <p class="mt-4">Lines Processed </span></p>
+            <p class="mt-4">Lines Failed </span></p>
+            <p class="mt-4">Lines Skipped </span></p>
+            <p class="mt-4">Lines Succeeded </span></p>
+        </section>
+        <h4>Information</h4>
+        <section>
+
+        </section>
+    </div>
+</form>
+{% endblock content %}

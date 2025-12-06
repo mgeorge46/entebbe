@@ -1,0 +1,157 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Plan, Estimate,Quote, Book, Fly{% endblock greetings %}
+{% block text %}Entebbe Airways{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Home{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Booking{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Planning{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+  <!-- If using Bootstrap, include it here -->
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" /> -->
+
+  <style>
+    /* Example styling – adjust as needed */
+    .calculation-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0px;
+    }
+    .calculation-header {
+      margin-bottom: 1rem;
+    }
+    .calculation-header h2 {
+      font-weight: bold;
+    }
+    .calculation-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .calculation-col {
+      flex: 1;
+      min-width: 200px;
+      margin-right: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .calculation-col:last-child {
+      margin-right: 0;
+    }
+    .airport-info h4 {
+      margin-bottom: 0.3rem;
+    }
+    hr {
+      margin: 1.5rem 0;
+    }
+    .btn-primary {
+      /* Example button styling */
+      padding: 0.6rem 1.2rem;
+      color: #fff;
+      background-color: #007bff;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-primary:hover {
+      background-color: #0069d9;
+    }
+    /* End example styling */
+  </style>
+
+<div class="calculation-container">
+
+  <!-- Calculation Header -->
+  <div class="calculation-header">
+    <h2>Calculation Result</h2>
+  </div>
+
+  <!-- Top Row: Departure and Arrival Info -->
+  <div class="calculation-row">
+    <div class="calculation-col" style="text-align:left;">
+      <div class="airport-info">
+        <h4>{{ api_response.airport.departure_airport }}</h4>
+        <p><strong>Departure:</strong> {{ api_response.departure_date }} {{ api_response.departure_time }} LT</p>
+      </div>
+    </div>
+    <div class="calculation-col" style="text-align:right;">
+      <div class="airport-info">
+        <h4>{{ api_response.airport.arrival_airport }}</h4>
+        <p><strong>Arrival:</strong> {{ api_response.arrival_date }} {{ api_response.arrival_time }} LT</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Middle Row: Various Flight Details -->
+  <div class="calculation-row">
+    <div class="calculation-col">
+      <p><strong>Time difference:</strong> {{ api_response.time_difference }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Wind:</strong> {{ api_response.wind }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Airway distance:</strong> {{ api_response.distance.airway }} km</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Great circle distance:</strong> {{ api_response.distance.gc }} km</p>
+    </div>
+  </div>
+  <div class="calculation-row">
+    <div class="calculation-col">
+      <p><strong>Airway time wind impacted:</strong> {{ api_response.time.airway_impact }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Great circle time:</strong> {{ api_response.time.gc_time }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Total flight time:</strong> {{ api_response.time.total }}</p>
+    </div>
+  </div>
+
+  <!-- Optional Row: Additional Data (Aircraft, Fuel, etc.) -->
+  <div class="calculation-row">
+    <div class="calculation-col">
+      <p><strong>Aircraft:</strong> {{ api_response.aircraft }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Fuel Airway:</strong> {{ api_response.fuel.airway }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Fuel Airway Block:</strong> {{ api_response.fuel.airway_block }}</p>
+    </div>
+    <div class="calculation-col">
+      <p><strong>Estimated Time:</strong> {{ api_response.time.airway }} minutes</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Route Section -->
+  <h3>Route</h3>
+  <p>
+    {% for waypoint in api_response.route.ifr_route %}
+      {{ waypoint }}
+    {% endfor %}
+  </p>
+
+  <!-- Modify Calculation Button -->
+  <div style="margin: 2rem 0;">
+    <a href="/booking/estimate/">
+      <button type="button" class="btn btn-primary" id="js-programmatic-enable">
+        Modify Calculation
+      </button>
+    </a>
+  </div>
+
+  <!-- Previous Searches -->
+  <h4>Previous Searches</h4>
+  <!-- Insert your previous searches section here -->
+
+</div>
+
+
+
+
+
+
+
+{% endblock content %}

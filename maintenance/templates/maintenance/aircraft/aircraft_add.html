@@ -1,0 +1,15 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add an Aircraft{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}/{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Add{% endblock breadtext2 %}
+{% block content %}
+<form method="post" >
+    {% csrf_token %}
+    {{ form|crispy}}
+    <button type="submit" class="btn btn-success">Add Aircraft<span class="btn-icon-right"><i class="fa fa-check"></i></span></button>
+    <a href="{% url 'list_aircraft' %}" name="cancel" class="btn btn-warning">Cancel</a>
+</form>
+
+{% endblock content %}

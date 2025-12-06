@@ -1,0 +1,90 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Scheduled Flight Detailed View{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Airport{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+
+
+<h4>Airport Details: {{ airport.name }}</h4>
+
+<table class="table table-hover table-responsive-sm">
+    <tr>
+        <td>
+
+
+            <p><strong>Location:</strong> {{ airport.city_name}}</p>
+            <p><strong>Country:</strong> {{ airport.country_name }} </p>
+            <p><strong>Latitude:</strong> {{ airport.latitude }}</p>
+            <p><strong>Longitude:</strong> {{ airport.longitude }}</p>
+            <p><strong>Elevation:</strong> {{ airport.elevation }} meters</p>
+            <p><strong>Timezone:</strong> {{ airport.timezone }}</p>
+        </td>
+
+        <td>
+            <p><strong>IATA Code:</strong> {{ airport.iata }}</p>
+            <p><strong>Record Date:</strong> {{ airport.record_date }}</p>
+            <p><strong>Added By:</strong> {{ airport.added_by }}</p>
+            <p><strong>Updated Date:</strong> {{ airport.updated_date }}</p>
+            <p><strong>Updated By:</strong> {{ airport.updated_by }}</p>
+            <p><strong>Update Comments:</strong> {{ airport.update_comments }}</p>
+
+        </td>
+
+         <td>
+            <p><strong>SLUG:</strong> {{ airport.slug }}</p>
+            <p><strong>Phone Number:</strong> {{ airport.phone}}</p>
+            <p><strong>Email:</strong> {{ airport.email }}</p>
+            <p><strong>Tower Hours:</strong> {{ airport.tower_hours }}</p>
+            <p><strong>Sunset:</strong> {{ airport.sunset}}</p>
+            <p><strong>Sunrise:</strong> {{ airport.sunrise}}</p>
+
+        </td>
+
+    </tr>
+</table>
+<h4>Runways Details</h4>
+<table class="table" >
+    <thead class="thead-primary">
+        <tr>
+            <th>Record ID</th>
+            <th>Name</th>
+            <th>Length</th>
+            <th>Type</th>
+            <th>Lights</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for runway in airport.runways %}
+            <tr>
+                <td>{{ runway.id }}</td>
+                <td>{{ runway.name }}</td>
+                <td>{{ runway.length }}</td>
+                <td>{{ runway.type }}</td>
+                <td>{{ runway.lights }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">No runways available</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<!-- Links for editing or deleting the airport -->
+<a href="{% url 'airport_list' %}">
+    <button class="btn btn-warning" type="Cancel">Cancel</button>
+</a> |
+<a href="{% url 'airport_edit' airport.pk %}">
+    <button class="btn btn-primary" type="Cancel">Update</button>
+</a> |
+<a href="#" onclick="return confirm('Are you sure you want to delete this?');">
+    <button class="btn btn-danger" type="Cancel">Delete</button>
+</a>
+
+
+{% endblock content %}

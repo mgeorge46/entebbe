@@ -1,0 +1,32 @@
+
+{% load crispy_forms_tags %}
+
+
+<div class="row">
+    <div class="col-lg-8">
+
+
+        <!-- Form to create a new group -->
+<form method="post">
+  {% csrf_token %}
+  {{ form|crispy}}
+    <a href="{% url 'group_list' %}" class="btn btn-warning"> Cancel</a>
+   <button class= "btn btn-success" type="submit">Create Group</button>
+</form>
+
+
+    </div>
+  <div class="row col-md-4">
+        <div class="col-md-12">
+            <div class="social-graph-wrapper widget-facebook">
+                <strong>Available Flights</strong>
+            </div>
+            <div class="text-center">
+
+            </div>
+
+
+    </div>
+</div>
+
+

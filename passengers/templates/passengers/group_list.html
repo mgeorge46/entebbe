@@ -1,0 +1,76 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Passenger Group List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Passenger{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Groups{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<!-- Display the list of groups -->
+<form action="" method="get">
+    <div class="row">
+        <div class="row col-md-2">
+            <select class="form-control" id="page_size" name="page_size">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50" selected>50</option>
+            </select>
+
+        </div>
+        <button class="btn btn-success" type="submit">Filter</button>
+        <div class="row col-md-6">
+            &nbsp; &nbsp;<input class="form-control col-6" name="search" placeholder="Search by group name"
+                                type="text" value="{{ request.GET.search }}">&nbsp;&nbsp;
+            <button class="btn  btn-square btn-secondary" type="submit"> Search</button>
+
+        </div>
+
+        <div>
+            <a href="{% url 'create_group' %}" class="btn btn-rounded btn-primary" type="button"><span class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add New Group</a>
+        </div>
+    </div>
+</form><br>
+
+<!-- passengers/group_list.html -->
+<table class="table">
+  <thead>
+    <tr>
+      <th>Group Name</th>
+      <th>Group Status</th>
+        <th>Actions</th>
+      <!-- Add more table headers if needed -->
+    </tr>
+  </thead>
+  <tbody>
+    {% for group in page_obj %}
+    <tr>
+      <td>{{ group.group_name }}</td>
+      <td>{{ group.group_status }}</td>
+        <td>
+            <a href="{% url 'group_details' group.id  %}">
+                <button class="btn btn-outline-success" type="button">View</button>
+            </a>
+            <a href="{% url 'group_update' group.id  %}">
+                <button class="btn btn-outline-secondary" type="button">Edit</button>
+            </a>
+            <a href="#">
+                <button class="btn btn-outline-danger" type="button">Delete</button>
+            </a>
+        </td>
+      <!-- Add more table cells with group attributes if needed -->
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Pagination Links -->
+</div>
+
+
+
+
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add Aircraft Main Component{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Components{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+
+    <h1>Component Tree</h1>
+    <!-- Start displaying the tree here -->
+    {% include "maintenance/main_component/component_tree_node.html" with component=tree %}
+
+
+{% endblock content %}

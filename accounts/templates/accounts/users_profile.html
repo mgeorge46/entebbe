@@ -1,0 +1,224 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}{{ user.first_name }} {{ user.last_name }}'s Profile{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Users{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Accounts{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Profile{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<style>
+    .right-align {
+        text-align: center;
+    }
+    .left-align {
+        text-align: left;
+    }
+</style>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="profile">
+            <div class="profile-head">
+                <div class="photo-content">
+                    <div class="cover-photo"></div>
+                    <div class="profile-photo">
+                        <img src="{{ user.image.url}}" class="img-fluid rounded-circle" alt="">
+                    </div>
+                </div>
+
+                <div class="profile-info">
+                    <div class="row right-align">
+                        <div class="col-xl-12">
+                            <div class="row">
+                                <div class="col-xl-4 col-sm-4 border-right-1 prf-col">
+
+                                </div>
+                                <div class="col-xl-8 col-sm-8 border-right-1 prf-col">
+                                    <div class="profile-name">
+                                        <h4 class="text-primary">{{ user.first_name }} {{ user.last_name }} {{ user.email }}</h4>
+                                        <p>{{ user.designation }} | {{ user.department }}- {{ user.contact_number }}</p>
+                                    </div>
+                                </div>
+                                <!-- <div class="col-xl-4 col-sm-4 prf-col">
+                                    <div class="profile-call">
+                                        <h4 class="text-muted">(+1) 321-837-1030</h4>
+                                        <p>Phone No.</p>
+                                    </div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="profile-statistics">
+                    <div class="text-center mt-4 border-bottom-1 pb-3">
+                        <div class="row">
+                            <div class="col">
+                                <h3 class="m-b-0">150</h3><span>Flights</span>
+                            </div>
+                            <div class="col">
+                                <h3 class="m-b-0">140</h3><span>Leave Days</span>
+                            </div>
+                            <div class="col">
+                                <h3 class="m-b-0">45</h3><span>Days Taken</span>
+                            </div>
+                        </div>
+                        <div class="mt-4"><a href="javascript:void()" class="btn btn-primary pl-5 pr-5 mr-3 mb-4">Request Day off </a> <a href="javascript:void()" class="btn btn-dark pl-5 pr-5 mb-4">My Flights </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-blog pt-3 border-bottom-1 pb-1">
+                    <h5 class="text-primary d-inline">Licencing</h5>
+                    <div class="card">
+                        <div class="stat-widget-one card-body">
+                            <div class="stat-icon d-inline-block ">
+                                <i class="ti-check-box text-success border-success col-md-2"></i>
+                            </div>
+                            <div class="stat-content d-inline-block">
+                                <div class="stat-text">Type: Cabin Crew </div>
+                                <div class="stat-digit">13/Nov/2024</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-news mt-4 pb-3">
+                    <h5 class="text-primary d-inline">Notice Board</h5>
+                    <div class="media pt-3 pb-3">
+                        <img src="/static/images/images/profile/5.jpg" alt="image" class="mr-3">
+                        <div class="media-body">
+                            <h5 class="m-b-5">Flights</h5>
+                            <p>I shared this on my fb wall a few months back, and I thought I'd share it here again </p>
+                        </div>
+                    </div>
+                    <div class="media pt-3 pb-3">
+                        <img src="/static/images/images/profile/6.jpg" alt="image" class="mr-3">
+                        <div class="media-body">
+                            <h5 class="m-b-5">Maintenance</h5>
+                            <p>I shared this on my fb wall a few months back, and I thought I'd share it here again </p>
+                        </div>
+                    </div>
+                    <div class="media pt-3 pb-3">
+                        <img src="/static/images/images/profile/7.jpg" alt="image" class="mr-3">
+                        <div class="media-body">
+                            <h5 class="m-b-5">On Leave</h5>
+                            <p>I shared this on my fb wall a few months back, and I thought I'd share it here again </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="profile-tab">
+                    <div class="custom-tab-1">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item"><a href="#about-me" data-toggle="tab" class="nav-link">About Me</a>
+                            </li>
+                            <li class="nav-item"><a href="#profile-settings" data-toggle="tab" class="nav-link">Setting</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+
+                            <div id="about-me" class="tab-pane fade active show">
+                                <div class="profile-about-me">
+                                    <div class="pt-4 border-bottom-1 pb-4">
+                                        <div class="media">
+                                            <img class="rounded-circle account-img" src="{{ user.profile.image.url}}">
+                                            <div class="media-body">
+                                                Username: <h2 class="account-heading">{{ user.username }}</h2>
+                                                Names: <p class="text-secondary">{{ user.first_name }} {{ user.last_name }}</p>
+                                                Email: <p class="text-secondary">{{ user.email }}</p>
+                                            </div>
+                                        </div>
+                                        <form method="post" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <fieldset class="form-group">
+                                                <legend class="border-bottom mb-4">Profile Info</legend>
+                                                {{ u_form|crispy }}
+                                            </fieldset>
+                                            <div class="form-group">
+                                                <a href="/" name="cancel" class="btn btn-warning">Cancel</a>
+                                                <button class="btn btn-primary" type="submit">Update My Profile</button>
+                                                <a href="{% url 'user_reset_password' %}" name="cancel" class="btn btn-outline-danger">Password Reset</a>
+
+
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div id="profile-settings" class="tab-pane fade">
+                                <div class="pt-3">
+                                    <div class="settings-form">
+                                        <h4 class="text-primary">Account Setting</h4>
+                                        <form>
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label>Email</label>
+                                                    <input type="email" placeholder="Email" class="form-control">
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label>Password</label>
+                                                    <input type="password" placeholder="Password" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Address</label>
+                                                <input type="text" placeholder="1234 Main St" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Address 2</label>
+                                                <input type="text" placeholder="Apartment, studio, or floor" class="form-control">
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label>City</label>
+                                                    <input type="text" class="form-control">
+                                                </div>
+                                                <div class="form-group col-md-4">
+                                                    <label>State</label>
+                                                    <select class="form-control" id="inputState">
+                                                        <option selected="">Choose...</option>
+                                                        <option>Option 1</option>
+                                                        <option>Option 2</option>
+                                                        <option>Option 3</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-md-2">
+                                                    <label>Zip</label>
+                                                    <input type="text" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="gridCheck">
+                                                    <label for="gridCheck" class="form-check-label">Check me out</label>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-primary" type="submit">Update</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

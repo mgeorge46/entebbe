@@ -1,0 +1,35 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}{{passenger_details.full_name}} Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Passengers{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Details{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<p>
+    <a href="{%url 'flight_details' last_flight_number %}"> Recent Flight Number: {{last_flight_number}} Date: {{last_flight_date}}<br></a>
+    Passenger Names: {{passenger_details.full_name}}<br>
+    Boking Refre {{passenger_details.full_name}}<br>
+    Gender: {{passenger_details.gender}}<br>
+    Nationality: {{passenger_details.nationality}}<br>
+    National ID: {{passenger_details.national_id}}<br>
+    Passport_number: {{passenger_details.passport_number}}<br>
+    Address: {{passenger_details.flight_number.address}}<br>
+    Phone Number: {{passenger_details.phone_number}}<br>
+    email: {{passenger_details.email}}<br>
+    Special Requirements: {{passenger_details.special_requirements}}<br>
+    Emergency Contact Number: {{passenger_details.emergency_contact_number}}<br>
+    Created By: {{passenger_details.added_by}}<br>
+    Last Updated by: {{passenger_details.updated_by}}<br>
+    Comments after Updating: {{passenger_details.passenger_comments_update}}<br>
+    Time Last Updated: {{passenger_details.updated_date}}<br>
+</p>
+  <td>
+      <a href="{%url 'passenger_list' %}"><button type="button" class="btn btn-warning">Cancel</button></a>
+      <a href="{%url 'passenger_update' passenger_details.id  %}"><button type="button" class="btn btn-outline-secondary">Edit</button></a>
+<a href="{% url 'booking_list' %}"><button class="btn btn-info" type="Cancel">Print</button></a>
+      <a href="#"><button class="btn btn-primary" type="Cancel">Add Booking</button></a>
+      <a href="#"><button class="btn btn-danger" type="button">Delete</button></a>
+
+{% endblock content %}

@@ -1,0 +1,21 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %} Add Maintanance TechLog{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Techlog{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Add{% endblock breadtext4 %}
+
+{% block content %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy}}
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{% url 'aircraft_maintenance_techlog_list' %}" class="btn btn-warning">Cancel</a>
+</form>
+<!-- add_aircraft_sub_component.html -->
+
+
+{% endblock content %}

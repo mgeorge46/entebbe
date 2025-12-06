@@ -1,0 +1,42 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Updating {{booking_update.passenger_id}}'s Booking Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Flight{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Create{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Select the parent div of the return_flight field and the associated label
+    var returnFlightDiv = $('#id_return_flight').closest('div');
+    var returnFlightLabel = $("label[for='id_return_flight']");
+
+    // Initially hide the return_flight div and label
+    returnFlightDiv.hide();
+    returnFlightLabel.hide();
+
+    // Show or hide the return_flight div and label when trip_type changes
+    $('#id_trip_type').change(function() {
+        if ($(this).val() == 'round-trip') {
+            returnFlightDiv.show();
+            returnFlightLabel.show();
+        } else {
+            returnFlightDiv.hide();
+            returnFlightLabel.hide();
+        }
+    });
+});
+</script>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy}}
+    <a href="{% url 'booking_details' booking_update.id  %}" class="btn btn-warning" name="cancel">Cancel</a>
+    <button class="btn  btn-square btn-secondary" type="submit" name="submit">Update a Booking</button>
+  </form>
+
+{% endblock content %}

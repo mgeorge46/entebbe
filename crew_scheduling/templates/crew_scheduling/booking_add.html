@@ -1,0 +1,70 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add a Booking{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Passengers{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Booking{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Add{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+
+<script>
+$(document).ready(function() {
+    // Select the parent div of the return_flight field and the associated label
+    var returnFlightDiv = $('#id_return_flight').closest('div');
+    var returnFlightLabel = $("label[for='id_return_flight']");
+
+    // Initially hide the return_flight div and label
+    returnFlightDiv.hide();
+    returnFlightLabel.hide();
+
+    // Show or hide the return_flight div and label when trip_type changes
+    $('#id_trip_type').change(function() {
+        if ($(this).val() == 'round-trip') {
+            returnFlightDiv.show();
+            returnFlightLabel.show();
+        } else {
+            returnFlightDiv.hide();
+            returnFlightLabel.hide();
+        }
+    });
+});
+</script>
+
+
+
+
+
+<div class="row">
+    <div class="col-lg-8">
+
+  <form method="post" action="{% url 'add_booking' %}">
+  {% csrf_token %}
+  {{ form|crispy}}
+
+  <!-- Hidden fields for booking_id and passenger_group_id -->
+  <input type="hidden" name="passenger_group_id" value="{{ passenger_group_id }}">
+    <a href="{% url 'booking_list' %}" class="btn btn-warning"> Cancel</a>
+  <button class= "btn btn-success" type="submit">Add a Booking</button>
+</form>
+
+    </div>
+  <div class="row col-md-4">
+        <div class="col-md-12">
+            <div class="social-graph-wrapper widget-facebook">
+                <strong>Available Flights</strong>
+            </div>
+            <div class="text-center">
+
+            </div>
+
+
+    </div>
+</div>
+
+
+
+{% endblock content %}

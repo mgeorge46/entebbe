@@ -1,0 +1,82 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Schedule a Flight{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Flight{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Create{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<script>
+function toggleReturnFields() {
+    var tripType = document.getElementById('id_trip_type').value;
+    var returnFields = document.getElementsByClassName('return-field');
+
+    if (tripType === 'round-trip') {
+        for (var i = 0; i < returnFields.length; i++) {
+            returnFields[i].style.display = 'block';
+            returnFields[i].setAttribute('required', true);
+            returnFields[i].previousElementSibling.style.display = 'inline-block';
+        }
+    } else {
+        for (var i = 0; i < returnFields.length; i++) {
+            returnFields[i].style.display = 'none';
+            returnFields[i].removeAttribute('required');
+            returnFields[i].previousElementSibling.style.display = 'none';
+        }
+    }
+}
+
+// Call the toggleReturnFields function initially to set the initial state of the fields
+toggleReturnFields();
+
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+  $("#flight_status_field").hide();
+  $("#flight_status_label").hide();
+});
+</script>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="POST">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for field_errors in form.errors.values %}
+                {% for error in field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {{form}}
+            <br>
+            <a href="{% url 'flight_list' %}" class="btn btn-warning"> Cancel</a>
+            <button class="btn btn-success" type="submit">Schedule a Flight<span class="btn-icon-right"><i
+                    class="fa fa-check"></i></span>
+            </button>
+
+        </form>
+    </div>
+    &nbsp;&nbsp;<br>
+    <div class="row col-md-4">
+        <div class="col-md-12">
+            <div class="social-graph-wrapper widget-googleplus">
+                Flight Information
+            </div>
+
+                Destination Temperature<h3 class="m-1"><span class="counter">22°C°F</span></h3>
+                Aerial Distance <h3>534 KM</h3>
+                Aircraft Capacity <h3 class="m-1"><span class="counter">44 Passagers</span></h3>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock content %}

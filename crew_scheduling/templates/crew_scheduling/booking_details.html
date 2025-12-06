@@ -1,0 +1,34 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}{{booking_details.passenger_id}}'s Booking Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Passenger{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<p>
+   <u><font color="red"><a href="{%url 'flight_details' booking_details.flight_number.flight_number %}"> Flight Number: {{booking_details.flight_number}}</a></font></u><br>
+ <u><font color="red"><a href="{%url 'flight_details' booking_details.flight_number.flight_number %}"> Return Flight Number: {{booking_details.return_flight}}</a></font></u><br>
+    Passenger Names: {{booking_details.passenger_id}}<br>
+    Seat Number: {{booking_details.seat_number}}<br>
+    Booking Reference: {{booking_details.booking_reference}}<br>
+   Ticket Number: {{booking_details.booking_ticket_id}}<br>
+    Trip Type: {{booking_details.trip_type}}<br>
+    Departure Time: {{booking_details.flight_number.departure_time}}<br>
+    Arrival Time: {{booking_details.flight_number.arrival_time}}<br>
+    Return Departure Time: {{booking_details.flight_number.return_departure_time}}<br>
+    Return Arrival: {{booking_details.flight_number.return_arrival_time}}<br>
+    Date Entered: {{booking_details.record_date}}<br>
+    Scheduled By: {{booking_details.added_by}}<br>
+    Flight status: {{booking_details.flight_number.flight_status}}<br>
+    Last Updated by: {{booking_details.updated_by}}<br>
+    Booking Comments: {{booking_details.booking_comments}}<br>
+    Time Last Updated: {{booking_details.updated_date}}<br>
+    Reason for Updating: {{booking_details.updating_comments}}<br>
+</p>
+<a href="{% url 'booking_list' %}"><button class="btn btn-warning" type="Cancel">Cancel</button></a>
+<a href="{% url 'booking_update' booking_details.id %}"><button type="button" class="btn btn-outline-secondary">Edit</button></a>
+<a href="#"><button class="btn btn-danger" type="button">Delete</button></a>
+<a href="{% url 'booking_list' %}"><button class="btn btn-info" type="Cancel">Print</button></a>
+{% endblock content %}

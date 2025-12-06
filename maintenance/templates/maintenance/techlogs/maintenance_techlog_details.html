@@ -1,0 +1,30 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %} Update Aircraft Maintenance Tech Log{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Techlog{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Add{% endblock breadtext4 %}
+
+{% block content %}
+
+<div>
+<p><strong>Aircraft:</strong> {{ maintenance_techlog.aircraft }}</p>
+<p><strong>Off Block:</strong> {{ maintenance_techlog.off_block }}</p>
+    <p><strong>Flight Log:</strong> {{ maintenance_techlog.flight_log_number }}</p>
+    <p><strong>On Block:</strong> {{ maintenance_techlog.on_block }}</p>
+    <p><strong>Oper:</strong> {{ maintenance_techlog.oper }}</p>
+    <p><strong>AC Type:</strong> {{ maintenance_techlog.ac_type }}</p>
+    <p><strong>Serve Type:</strong> {{ maintenance_techlog.serve_type }}</p>
+    <p><strong>Per Day:</strong> {{ maintenance_techlog.per_day }}</p>
+    <p><strong>Air Time:</strong> {{ maintenance_techlog.air_time }}</p>
+    <p><strong>Cycles:</strong> {{ maintenance_techlog.cycles }}</p>
+
+</div>
+<a href="{% url 'update_aircraft_maintenance_techlog' maintenance_techlog.pk %}" class="btn btn-secondary">Update</a>
+<a href="{% url 'aircraft_maintenance_techlog_list' %}" class="btn btn-warning">Cancel</a>
+
+
+
+{% endblock content %}

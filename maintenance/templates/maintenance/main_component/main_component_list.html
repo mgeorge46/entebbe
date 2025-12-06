@@ -1,0 +1,60 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Main Components List {% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Components{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+<style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+
+</style>
+<h4>List of Main -Components for {{aircraft}} total Main components: {{total_main_components}}</h4>
+<form method="get">
+  Search <input type="text" name="search" value="{{ request.GET.search }}">
+    Min. Hours <input type="number" name="min_hours" value="{{ request.GET.min_hours }}" placeholder="Min hours">
+    Max. Hours <input type="number" name="max_hours" value="{{ request.GET.max_hours }}" placeholder="Max hours">
+    <input type="submit" class="btn btn-primary" value="Search"> &nbsp;&nbsp;
+
+    &nbsp;&nbsp;
+     <a href="{% url 'add_aircraft_main_component' aircraft.pk %}" class="btn btn-rounded btn-primary" type="button"><span class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add</a>
+</form>
+
+{% load django_tables2 %}
+{% render_table table %}
+
+<a href="{% url 'aircraft_detail' aircraft.registration_number %}"><button type="button" class="btn btn-warning">Back to Aircraft</button></a>
+                <a href="{% url 'aircraft_edit' aircraft.pk %}"><button type="button" class="btn btn-outline-secondary">Edit Aircraft</button></a>
+                <a href="#"><button type="button" class="btn btn-outline-danger">Delete</button></a>
+                <a href="{% url 'create_flighttechlog'  aircraft.registration_number %}"><button type="button" class="btn btn-outline-warning">Flight Tech Log</button></a>
+                <a href="#"><button type="button" class="btn btn-outline-success">Maintenance</button></a>
+
+
+
+
+{% endblock content %}

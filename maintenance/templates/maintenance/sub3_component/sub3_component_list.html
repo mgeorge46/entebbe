@@ -1,0 +1,137 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Third Level Sub- Components List {% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Components{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Sub-Components{% endblock breadtext4 %}
+{% block content %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 8px;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .pagination {
+        margin-top: 10px;
+    }
+
+
+</style>
+<div class="table-responsive">
+
+    <h6>Aircraft: {{component.parent_sub_component.parent_component.aircraft_attached}} |- Main:
+        {{component.parent_sub_component.parent_component.component_name}} |- Sub:
+        {{component.parent_sub_component.component_name}} |- 2<sup>nd</sup> Level: {{component.component_name}}</h6>
+    <hr>
+    <table class="table table-striped table-responsive-sm">
+        <tr>
+            <td>
+
+                maintenance_hours: {{component.maintenance_hours}} {% if component.maintenance_hours >= 4 %} &nbsp;&nbsp;
+                <div class="stat-icon d-inline-block"><i class="ti-check-box text-success border-success"></i></div>
+                {% else %}
+                &nbsp;&nbsp;<div class="stat-icon d-inline-block"><i
+                    class="ti-stats-down text-danger border-danger"></i></div>
+                {% endif %}<br>
+                Part Number Type{{component.part_number}}<br>
+                Serial Number {{component.serial_number }}<br>
+                Make (Ven Code)):{{component.component_make}}<br>
+                Component Model: {{component.component_model}}<br>
+                Description: {{component.description}}<br>
+                install Date: {{component.install_date}}<br>
+                Delivery Date: {{component.delivery_date}}<br>
+                Delivery Date: {{component.component_location}}<br>
+            </td>
+            <td>
+                LRU (Ven Code)):{{component.component_make}}<br>
+                OPT: {{component.component_model}}<br>
+                Owner: {{component.description}}<br>
+                TSN: {{component.install_date}}<br>
+                CSN: {{component.delivery_date}}<br>
+                ATA: {{component.component_location}}<br>
+                DOM: {{component.component_status}}<br>
+                TSI: {{component.maintenance_status}}<br>
+                CSI: {{component.maintenance_status}}<br>
+
+
+            </td>
+            <td>
+                QPA (Quantity): {{component.maintenance_status}}<br>
+                Component Calender:{{component.item_calender}}<br>
+                Component Cycle:{{component.item_cycle}}<br>
+                Component Status: {{component.component_status}}<br>
+                Maintenance Status: {{component.maintenance_status}}<br>
+                Added By {{component.added_by}}<br>
+                Date Updated {{component.updated_date}}<br>
+                Updated by {{aircraft.updated_by}}<br>
+                Remarks {{component.remarks}}<br>
+            </td>
+        </tr>
+    </table>
+
+    <br>
+    <div class="btn-group" role="group">
+        <a href="{% url 'aircraft_sub2_components_list' component.parent_sub_component.id %}">
+            <button class="btn btn-outline-warning" type="button"><< 2<sup>nd</sup>  Sub-Component</button>
+        </a>&nbsp;&nbsp;
+        <a href="{% url 'clone_component_generic' model_name component.id%}">
+            <button class="btn btn-outline-danger" type="button">Clone &nbsp {{component.component_name}}</button>
+        </a>&nbsp;&nbsp;
+        <a href="{% url 'aircraft_sub2_components_update' component.id %}">
+            <button class="btn btn-outline-secondary" type="button">Update</button>
+        </a>&nbsp;&nbsp;
+        <button class="btn btn-warning dropdown-toggle" data-toggle="dropdown" type="button">Export</button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="javascript:void()">PDF</a>
+            <a class="dropdown-item" href="javascript:void()">CSV</a>
+        </div>&nbsp;&nbsp;
+
+        <a href="#">
+            <button class="btn btn-outline-success" type="button">Maintenance</button>
+        </a>&nbsp;&nbsp;
+        <a href="#">
+            <button class="btn btn-outline-danger" type="button">Delete</button>
+        </a>
+
+    </div>
+</div>
+<br>
+<hr>
+<h5>List of Third Level Sub -Components for {{component.aircraft_attached}} Total Subcomponents:
+    {{total_components}}</h5>
+<form method="get">
+    Search <input name="search" type="text" value="{{ request.GET.search }}">
+    Min. Hours <input name="min_hours" placeholder="Min hours" type="number" value="{{ request.GET.min_hours }}">
+    Max. Hours <input name="max_hours" placeholder="Max hours" type="number" value="{{ request.GET.max_hours }}">
+    <input class="btn btn-primary" type="submit" value="Search">
+    <a href="{% url 'add_aircraft_sub3_component' component.id %}">
+        <button class="btn btn-success" type="button">Add</button>
+    </a>
+</form>
+<hr>
+{% load django_tables2 %}
+{% render_table table %}
+<hr>
+<div class="btn-group" role="group">
+        <button class="btn btn-warning dropdown-toggle" data-toggle="dropdown" type="button">Export Sub-Components List for {{component.component_name}} </button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="javascript:void()">PDF</a>
+            <a class="dropdown-item" href="javascript:void()">CSV</a>
+        </div>
+    </div>
+{% endblock content %}

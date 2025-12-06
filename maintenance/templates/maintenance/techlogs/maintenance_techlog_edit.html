@@ -1,0 +1,25 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %} Update Aircraft Maintenance Tech Log{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Techlog{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Add{% endblock breadtext4 %}
+
+{% block content %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy}}
+    <label for="update_comments">Update Comments:</label>
+    <textarea id="update_comments" name="update_comments" required></textarea>
+  <br>
+
+    <button type="submit" class="btn btn-success">Update</button>
+    <a href="{% url 'aircraft_maintenance_techlog_list' %}" class="btn btn-warning">Cancel</a>
+</form>
+
+
+
+{% endblock content %}

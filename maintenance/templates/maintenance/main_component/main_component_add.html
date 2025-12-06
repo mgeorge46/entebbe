@@ -1,0 +1,48 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add Aircraft Main Component{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Components{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+
+
+
+    <h4>Add Aircraft Main Component for {{ aircraft.abbreviation }}</h4>
+    <form method="post">
+        <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Toggle the serial numbers field based on the multiple entries checkbox
+    const multipleEntriesCheckbox = document.getElementById('multipleEntriesCheckbox');
+    const serialNumbersTextarea = document.getElementById('serialNumbersTextarea');
+
+    // Function to show/hide the serial numbers field
+    function toggleSerialNumbersField() {
+        if (multipleEntriesCheckbox.checked) {
+            serialNumbersTextarea.style.display = 'block';
+        } else {
+            serialNumbersTextarea.style.display = 'none';
+        }
+    }
+
+    // Initial check in case the checkbox is already checked when the page loads
+    toggleSerialNumbersField();
+
+    // Event listener for changes to the checkbox
+    multipleEntriesCheckbox.addEventListener('change', toggleSerialNumbersField);
+});
+</script>
+        {% csrf_token %}
+        <!-- Display aircraft details in read-only format -->
+
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-success" >Add Main Component</button>
+          <a href="{% url 'aircraft_detail' aircraft.registration_number %}" class="btn btn-primary">Back to Aircraft Details</a>
+    </form>
+
+
+
+{% endblock content %}

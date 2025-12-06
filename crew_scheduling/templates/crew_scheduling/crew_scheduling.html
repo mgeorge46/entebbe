@@ -1,0 +1,139 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Crew Scheduling {% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block dashcontent %}
+
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-user text-primary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Cabin Crew</div>
+                <div class="stat-digit">232</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-control-forward text-success border-success"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Scheduled Cabin Crew</div>
+                <div class="stat-digit">23</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-stats-down text-danger border-danger"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Cabin Out of Office</div>
+                <div class="stat-digit">23</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-target text-primary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Flight Crew</div>
+                <div class="stat-digit">23</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-stats-up text-success border-success"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Scheduled Flight Crew</div>
+                <div class="stat-digit">23</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-shift-right text-danger border-danger"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Flight Out of Office</div>
+                <div class="stat-digit">23</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock dashcontent %}
+{% block content %}
+{% load render_table from django_tables2 %}
+<div class="card-body">
+    <ul class="nav nav-pills mb-4">
+        <li class=" nav-item">
+            <a href="#navpills-1" class="nav-link active" data-toggle="tab" aria-expanded="false">Flights with Crew</a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-2" class="nav-link" data-toggle="tab" aria-expanded="false">Flights without Crew</a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-3" class="nav-link" data-toggle="tab" aria-expanded="true">Free Crew </a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-4" class="nav-link" data-toggle="tab" aria-expanded="true">Licencing</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div id="navpills-1" class="tab-pane active">
+            <div class="row">
+                <div class="col-md-12">
+                    {% render_table table_with_crew %}
+                </div>
+            </div>
+        </div>
+        <div id="navpills-2" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+                    {% render_table table_without_crew %}
+                </div>
+            </div>
+        </div>
+        <div id="navpills-3" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+                    {% render_table table_without_crew %}
+                </div>
+            </div>
+        </div>
+        <div id="navpills-4" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+                    dee
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

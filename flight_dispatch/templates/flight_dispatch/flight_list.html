@@ -1,0 +1,32 @@
+{% extends "includes/base.html" %}
+{% block greetings %}List of Scheduled Flights{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Flight{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+
+{% load django_tables2 %}
+<form method="get">
+    {{ form.search_term }}
+    {{ form.flight_status}}
+    Range: {{ form.date_from }}
+    -{{ form.date_to }}
+   {{ form.per_page }}
+    <input class="btn btn-success" type="submit" value="Filter"> &nbsp; &nbsp;
+    <a href="{% url 'flight_create' %}" class="btn btn-rounded btn-primary" type="button"><span class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add</a>
+</form>
+
+{% render_table table %}
+
+{% block pagination %}
+
+{% endblock %}
+
+
+
+{% endblock content %}

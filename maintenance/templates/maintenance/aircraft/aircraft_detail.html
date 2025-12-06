@@ -1,0 +1,276 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Aircraft Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+ {% block dashcontent %}
+<div class="col-lg-3 col-sm-6" xmlns="http://www.w3.org/1999/html">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-money text-success border-success"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Total Cycles</div>
+                                    <div class="stat-digit">{{ completed_flights|default:"0"}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-support text-primary border-primary"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Components</div>
+                                    <div class="stat-digit">{{ total_main_components|add:total_sub_components|add:total_sub_2_components|add:total_sub_3_components|default:"0" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-heart text-success border-success"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Healthy</div>
+                                    <div class="stat-digit">{{ main_components_greater_than_or_equal_to_10|add:sub_components_greater_than_or_equal_to_10 |add:sub2_components_greater_than_or_equal_to_10|add:sub3_components_greater_than_or_equal_to_10|default:"0" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-heart-broken text-danger border-danger"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Attention</div>
+                                    <div class="stat-digit">{{ main_components_less_than_10|add:sub_components_less_than_10|add:sub2_components_less_than_10|add:sub3_components_less_than_10|default:"0" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+<div class="col-lg-3 col-sm-6" xmlns="http://www.w3.org/1999/html">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-arrow-circle-down text-warning border-warning"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Main Check</div>
+                                    <div class="stat-digit">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-brush-alt text-warning border-warning"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Serviced</div>
+                                    <div class="stat-digit">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-reload text-danger border-danger"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text"> Due Date</div>
+                                    <div class="stat-digit">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="card">
+                            <div class="stat-widget-one card-body">
+                                <div class="stat-icon d-inline-block">
+                                    <i class="ti-calendar text-danger border-danger"></i>
+                                </div>
+                                <div class="stat-content d-inline-block">
+                                    <div class="stat-text">Calendar</div>
+                                    <div class="stat-digit">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+{% endblock dashcontent %}
+{% block content %}
+
+<div class="card-body">
+    <ul class="nav nav-pills mb-4">
+        <li class=" nav-item">
+            <a href="#navpills-1" class="nav-link active" data-toggle="tab" aria-expanded="false">Aircraft Details</a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-2" class="nav-link" data-toggle="tab" aria-expanded="false">Maintenance Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-3" class="nav-link" data-toggle="tab" aria-expanded="false">Configuration</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div id="navpills-1" class="tab-pane active">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table">
+                        <tr>
+                            <td>
+                                <p>
+                                    Abbreviation  {{aircraft.abbreviation}}<br>
+                                    Registration Number {{aircraft.registration_number}}<br>
+                                    Aircraft {{aircraft.aircraft_model}}<br>
+                                    Aircraft Type{{aircraft.aircraft_type}}<br>
+                                    Manufacturer {{aircraft.manufacturer}}<br>
+                                    Year of Manufacture {{aircraft.year}}<br>
+                                    Passenger Seating Capacity{{aircraft.seating_capacity}}<br>
+                                    Cabin Crew Capacity {{aircraft.cabin_crew_capacity}}<br>
+                                    Take Off Weight {{aircraft.takeoff_weight}}<br>
+                                    Available Payload {{aircraft.max_available_Payload}}<br>
+                                    Aircraft Status {{aircraft.aircraft_status}}<br>
+                                    Date Recorded {{aircraft.record_date}}<br>
+                                    Added By {{aircraft.added_by}}<br>
+                                    Date Updated {{aircraft.updated_date}}<br>
+                                    Reason for Updating Records {{aircraft.update_comments }}<br>
+                                    Date Updated {{aircraft.updated_by}}<br>
+
+
+                                </p>
+                            </td>
+                            <td>
+                                <div id="accordion-one" class="accordion accordion-header-shadow accordion-rounded  ">
+                                    {% for main_component in main_components %}
+                                    <div class="accordion__item">
+                                        <div class="accordion__header" data-toggle="collapse" data-target="#main_component_{{ main_component.id }}">
+            <span class="accordion__header--text">{{ main_component.component_name }}:  Maintenance Hours Balance:- {{ main_component.maintenance_hours }}
+                {% if main_component.maintenance_hours >= 4 %} &nbsp;&nbsp;
+                    <div class="stat-icon d-inline-block"><i class="ti-check-box text-success border-success"></i></div>
+                {% else %}
+                    &nbsp;&nbsp;<div class="stat-icon d-inline-block"><i class="ti-stats-down text-danger border-danger"></i></div>
+                {% endif %}
+                <span class="accordion__header--indicator"></span></span>
+                                        </div>
+                                        <div id="main_component_{{ main_component.id }}" class="collapse accordion__body" data-parent="#accordion-one">
+                                            <div class="accordion__body--text">
+                                                {% for sub_component in main_component.aircraftsubcomponent_set.all %}
+                                                <p>Name:-{{ sub_component.component_name }}:-{{ sub_component.maintenance_hours}}
+                                                    {% if sub_component.maintenance_hours >= 4 %}
+                                                    &nbsp;&nbsp; <i class="ti-check-box text-success border-success"></i>
+                                                    {% else %}
+                                                    &nbsp;&nbsp; <i class="ti-stats-down text-danger border-danger"></i>
+                                                    {% endif %}
+                                                </p>
+                                                {% endfor %}
+                                                <a class="btn btn-outline-secondary" href="{% url 'add_aircraft_sub_component' main_component.id %}">Add Sub-Component</a>
+                                                <a class="btn btn-outline-warning" href="{% url 'aircraft_sub_components_list' main_component.id %}">List Sub-Component</a>
+                                                <a href="#"><button type="button" class="btn btn-outline-success">Maintenance</button></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="pagination pagination-gutter">
+                                    {% if main_components.has_previous %}
+                                    <a href="?page={{ main_components.previous_page_number }}">previous</a>
+                                    {% endif %}
+
+                                    <span class="current-page">Page {{ main_components.number }} of {{ main_components.paginator.num_pages }}</span>
+
+                                    {% if main_components.has_next %}
+                                    <a href="?page={{ main_components.next_page_number }}">next</a>
+                                    {% endif %}
+                                </div>
+
+
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="navpills-2" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+
+
+
+                        <div class="col-md-6">
+                            <h4 class="card-title">Maintenance Check Hours Usage </h4>
+                            <div class="card-body">
+                                <h6>A-Check
+                                    <span class="pull-right">8 Hours Remaining</span>
+                                </h6>
+                                <div class="progress ">
+                                    <div class="progress-bar bg-danger progress-animated" style="width: 95%; height:6px;" role="progressbar">
+                                        <span class="sr-only">60% Complete</span>
+                                    </div>
+                                </div>
+                                <h6 class="mt-4">C-Check
+                                    <span class="pull-right">545 Hours Remaining</span>
+                                </h6>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info progress-animated" style="width: 70%; height:6px;" role="progressbar">
+                                        <span class="sr-only">60% Complete</span>
+                                    </div>
+                                </div>
+                                <h6 class="mt-4">D-Check
+                                    <span class="pull-right">1879 Hours Remaining</span>
+                                </h6>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success progress-animated" style="width: 30%; height:6px;" role="progressbar">
+                                        <span class="sr-only">60% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                </div>
+            </div>
+        </div>
+        <div id="navpills-3" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+
+
+
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<br>
+                <a href="{% url 'list_aircraft' %}"><button type="button" class="btn btn-warning">Cancel</button></a>
+                <a href="{% url 'aircraft_edit' aircraft.pk %}"><button type="button" class="btn btn-outline-secondary">Update</button></a>
+
+                <a href="#"><button type="button" class="btn btn-outline-danger">Delete</button></a>
+<a href="{% url 'aircraft_main_components_list' aircraft.pk %}"><button type="button" class="btn btn-outline-primary">Main Components</button></a>
+                <a href="{% url 'create_flighttechlog'  aircraft.registration_number %}"><button type="button" class="btn btn-outline-danger">Tech Log</button></a>
+                <a href="#"><button type="button" class="btn btn-outline-success">Maintenance</button></a>
+ <a href="{% url 'bulk_component_import' aircraft.registration_number %} "><button type="button" class="btn btn-outline-warning">Bulky Import</button></a>
+
+
+{% endblock content %}

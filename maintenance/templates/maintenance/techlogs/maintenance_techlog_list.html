@@ -1,0 +1,61 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Aircraft Maintenance Log List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Techlog{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}List{% endblock breadtext4 %}
+{% block content %}
+{% load django_tables2 %}
+<style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+
+</style>
+
+<form method="get">
+    <label>Aircraft</label>
+    <select name="aircraft">
+        <option value="">Select Aircraft</option>
+        {% for aircraft in aircraft_list %}
+        <option value="{{ aircraft.id }}">{{ aircraft.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Maintenance Date</label> From
+    <input type="date" name="arrival_date_from" placeholder="From">
+    To
+    <input type="date" name="arrival_date_to" placeholder="To">
+
+    <button type="submit" class="btn btn-primary">Filter</button>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="{% url 'add_aircraft_maintenance_techlog' %}" class="btn btn-rounded btn-primary" type="button"><span class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add</a>
+</form>
+
+{% load django_tables2 %}
+{% render_table table %}
+
+
+
+{% endblock content %}

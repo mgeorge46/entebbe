@@ -1,0 +1,35 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Plan, Estimate,Quote, Book, Fly{% endblock greetings %}
+{% block text %}Entebbe Airways{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Home{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Booking{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Planning{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+<h4>Flight Information</h4>
+  <p><strong>Aircraft:</strong> {{ api_response.aircraft }}</p>
+  <p><strong>Departure Airport:</strong> {{ api_response.airport.departure_airport }}</p>
+  <p><strong>Arrival Airport:</strong> {{ api_response.airport.arrival_airport }}</p>
+  <p><strong>Airway Distance:</strong> {{ api_response.distance.airway }} miles</p>
+  <p><strong>Fuel Airway:</strong> {{ api_response.fuel.airway }}</p>
+  <p><strong>Fuel Airway Block:</strong> {{ api_response.fuel.airway_block }}</p>
+  <p><strong>Estimated Time:</strong> {{ api_response.time.airway }} minutes</p>
+
+  <h3>IFR Route:</h3>
+  <ul>
+    {% for waypoint in api_response.route.ifr_route %}
+      <li>{{ waypoint }}</li>
+    {% endfor %}
+  </ul>
+
+<br><br>
+
+<a href="/booking/estimate/" ><button type="button" class="btn btn-primary" id="js-programmatic-enable">Modify Calculation </button></a>
+
+<h4>Previous Searches </h4>
+
+
+
+
+{% endblock content %}

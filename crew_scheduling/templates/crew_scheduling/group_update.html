@@ -1,0 +1,18 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Updating Group Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Passengers{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Booking{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Groups{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Update{% endblock breadtext4 %}
+{% block content %}
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy}}
+    <button class="btn  btn-square btn-secondary" type="submit" name="submit">Update Group</button>
+    <a href="#"><button class="btn btn-warning" type="cancel" name="cancel">Cancel</button></a>
+  </form>
+
+{% endblock content %}

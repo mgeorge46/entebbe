@@ -1,0 +1,99 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Flight Booking List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Passengers{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Booking{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+
+</style>
+
+<form action="" method="get">
+    <div class="row">
+        <div class="row col-md-2">
+            <select class="form-control" id="page_size" name="page_size">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50" selected>50</option>
+            </select>
+
+        </div>
+        <button class="btn btn-success" type="submit">Filter</button>
+        <div class="row col-md-6">
+            &nbsp; &nbsp;<input class="form-control col-6" name="search" placeholder="Search by flight number"
+                                type="text" value="{{ request.GET.search }}">&nbsp;&nbsp;
+            <button class="btn  btn-square btn-secondary" type="submit"> Search</button>
+
+        </div>
+
+        <div>
+            <a href="{%url 'add_booking' %}" class="btn btn-rounded btn-primary" type="button"><span class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add a Booking</a>
+        </div>
+    </div>
+</form><br>
+<table>
+    <thead>
+    <tr>
+        <th>Flight Number</th>
+        <th>Seat Number</th>
+        <th>Passenger</th>
+        <th>Departure Time</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for booking in page_obj %}
+    <tr>
+        <td>{{ booking.flight_number.flight_number }}</td>
+        <td>{{ booking.seat_number }}</td>
+        <td>{{ booking.passenger_id }}</td>
+        <td>{{ booking.flight_number.departure_time }}</td>
+        <td>
+            <a href="{%url 'booking_details' booking.id  %}">
+                <button class="btn btn-outline-success" type="button">View</button>
+            </a>
+            <a href="{%url 'booking_update' booking.id  %}">
+                <button class="btn btn-outline-secondary" type="button">Edit</button>
+            </a>
+
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="4">No bookings found.</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+
+{% endblock content %}

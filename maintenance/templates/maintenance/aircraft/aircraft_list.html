@@ -1,0 +1,59 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Aircraft List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+{% load django_tables2 %}
+<style>
+    /* Existing styles */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        text-align: left;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    .pagination {
+        margin-top: 10px;
+    }
+
+    /* New styles for the filter form */
+    .filter-form {
+        display: flex;
+        align-items: center; /* Align items vertically */
+        flex-wrap: wrap; /* Allow items to wrap as needed */
+    }
+    .filter-form .btn, .filter-form .btn-rounded {
+        margin-left: 10px; /* Add some space between the filter button and the add button */
+    }
+    .filter-form .form-control {
+        margin-right: 10px; /* Space between form inputs */
+    }
+</style>
+
+
+<form method="GET" class="filter-form">
+    {{ view.filter.form }}
+    <button type="submit" class="btn btn-primary ">Filter</button> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <a class="btn btn-rounded btn-primary" href="{% url 'add_aircraft' %}" type="button">
+        <span class="btn-icon-left text-info">
+            <i class="fa fa-plus color-info"></i>
+        </span>
+        Add Aircraft
+    </a>
+</form>
+
+
+{% render_table table %}
+
+{% endblock content %}

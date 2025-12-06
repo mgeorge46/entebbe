@@ -1,0 +1,120 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Aircraft Flight Tech Log List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Flight{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Techlog{% endblock breadtext4 %}
+{% block content %}
+{% load django_tables2 %}
+<style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+
+</style>
+
+
+
+<div class="card-body">
+    <ul class="nav nav-pills mb-4">
+        <li class=" nav-item">
+            <a href="#navpills-1" class="nav-link active" data-toggle="tab" aria-expanded="false">Pending</a>
+        </li>
+        <li class="nav-item">
+            <a href="#navpills-2" class="nav-link" data-toggle="tab" aria-expanded="false">Completed</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div id="navpills-1" class="tab-pane active">
+            <div class="row">
+                <div class="col-md-12">
+                    <form method="get" action="">
+
+
+                        <label for="flight_leg">Flight Number:</label>
+                        <input type="text" id="flight_number" name="flight_number" value="{{ flight_number }}">
+
+                        <label for="departure_airport">Origin:</label>
+                        <input type="text" id="origin" name="origin" value="{{ request.GET.origin }}">
+
+                        <label for="departure_from">Flight Ref:</label>
+                        <input type="date" id="flight_booking_reference" name="departure_from" value="{{ request.GET.flight_booking_reference }}">
+
+                        <label for="departure_from">Departure From:</label>
+                        <input type="date" id="departure_from_flight" name="departure_from_flight" value="{{ request.GET.departure_from_flight }}">
+
+                        <label for="departure_to"> To:</label>
+                        <input type="date" id="departure_to_flight" name="departure_to_flight" value="{{ request.GET.departure_to_flight }}">
+                        <button type="submit" class="btn btn-primary">Search</button>
+
+                    </form>
+                    {% load django_tables2 %}
+                    {% render_table pending_flight_table %}
+
+                </div>
+            </div>
+        </div>
+        <div id="navpills-2" class="tab-pane">
+            <div class="row">
+                <div class="col-md-12">
+                    <form method="get" action="">
+
+
+                        <label for="flight_leg">Flight Leg:</label>
+                        <input type="text" id="flight_leg" name="flight_leg" value="{{ flight_leg }}">
+
+                        <label for="aircraft">Aircraft:</label>
+                        <select id="aircraft" name="aircraft">
+                            <option value="">--Select Aircraft--</option>
+                            {% for ac in aircrafts %}
+                            <option value="{{ ac.id }}" {% if request.GET.aircraft == ac.id|stringformat:"s" %}selected{% endif %}>{{ ac }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="departure_airport">Departure Airport:</label>
+                        <input type="text" id="departure_airport" name="departure_airport" value="{{ request.GET.departure_airport }}">
+
+                        <label for="departure_from">Departure From:</label>
+                        <input type="date" id="departure_from" name="departure_from" value="{{ request.GET.departure_from }}">
+
+                        <label for="departure_to"> To:</label>
+                        <input type="date" id="departure_to" name="departure_to" value="{{ request.GET.departure_to }}">
+
+                        <button type="submit" class="btn btn-primary">Search</button>
+
+                    </form>
+                    {% load django_tables2 %}
+                    {% render_table table %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+{% endblock content %}

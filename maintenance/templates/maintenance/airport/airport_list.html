@@ -1,0 +1,119 @@
+{% extends "includes/base.html" %}
+{% block greetings %}List of Scheduled Flights{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Airport{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+<!-- airport_list.html -->
+
+<form method="get" action=".">
+    <select id="paginate_by" name="paginate_by" onchange="this.form.submit()">
+        <option value="10" {% if request.GET.paginate_by == '10' %}selected{% endif %}>10</option>
+        <option value="30" {% if request.GET.paginate_by == '30' %}selected{% endif %}>30</option>
+        <option value="50" {% if request.GET.paginate_by == '50' %}selected{% endif %}>50</option>
+    </select>
+
+    <label for="paginate_by">Items per page</label>
+
+    &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;<a href="{% url 'airport_add' %}"> <i class="fa fa-plus-square fa-2x text-warning border-warning" title="Add" aria-hidden="true"></i> Add Airport</a>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="#" data-toggle="modal" data-target="#CountryAdd"><i class="fa fa-flag-checkered fa-2x text-danger border-primary" title="Add" aria-hidden="true"></i>Add Country Airports </a>&nbsp;&nbsp;
+    <div class="modal fade" id="CountryAdd">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Adding Airports from a selected Country</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'includes/country_list.html' %}
+
+
+
+                                                    <p><h4>Kindly note that this will add all the airports from the selected country and this action is billed</h4></p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary">Continue</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="#" data-toggle="modal" data-target="#CountryUpdate"><i class="fa fa-plane fa-2x text-success border-warning" title="Add" aria-hidden="true"></i>Update Country Airports </a>
+    <div class="modal fade" id="CountryUpdate">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Update Airports from a selected Country</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% include 'includes/country_list.html' %}
+
+
+
+                                                    <p><h4>Kindly note that this will update all the airports from the selected country and this action is billed</h4></p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary">Continue</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+</form>
+
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>IATA Code</th>
+        <th>Time Zone</th>
+        <th>City</th>
+        <th>Location</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for airport in airports %}
+    <tr>
+        <td>{{ airport.name }}</td>
+        <td>{{ airport.iata }}</td>
+        <td>{{ airport.timezone }}</td>
+        <td>{{ airport.city_name }}</td>
+        <td>{{ airport.country_name }}</td>
+        <td>
+            <a href="{% url 'airport_detail' airport.pk %}"><i class="fa fa-eye fa-2x text-primary border-primary" title="View Details"aria-hidden="true"></i></a>&nbsp;&nbsp;&nbsp
+            <a href="{% url 'airport_edit' airport.pk %}"><i class="fa fa-pencil-square-o fa-2x text-secondary border-secondary" title="Edit" aria-hidden="true"></i></a>&nbsp;&nbsp;&nbsp;
+            <a href="#" onclick="return confirm('Are you sure?');"><i class="fa fa fa-trash fa-2x text-danger border-secondary" title="Edit" aria-hidden="true"></i></a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if airports.has_previous %}
+            <a href="?page=1{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}">&laquo; first</a>
+            <a href="?page={{ airports.previous_page_number }}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ airports.number }} of {{ airports.paginator.num_pages }}.
+        </span>
+
+        {% if airports.has_next %}
+            <a href="?page={{ airports.next_page_number }}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}">next</a>
+            <a href="?page={{ airports.paginator.num_pages }}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+
+{% endblock content %}

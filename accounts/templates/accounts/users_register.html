@@ -1,0 +1,18 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add a user Account {% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Accounts{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Users{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Add{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<!-- user_create.html -->
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form|crispy}}
+  <a href="{% url 'user_list' %}" class="btn btn-warning"> Cancel</a>
+  <button class="btn btn-success" type="submit">Create User</button>
+</form>
+
+{% endblock content %}

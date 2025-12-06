@@ -1,0 +1,23 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add Aircraft Main Component{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Components{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+    <h4>Add Aircraft Main Component for {{ aircraft.abbreviation }}</h4>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Display aircraft details in read-only format -->
+
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-success" >Add Main Component</button>
+          <a href="{% url 'aircraft_detail' aircraft.registration_number %}" class="btn btn-primary">Back to Aircraft Details</a>
+    </form>
+
+
+
+{% endblock content %}

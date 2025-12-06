@@ -1,0 +1,18 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Add an Aircraft{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Component{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Clone{% endblock breadtext4 %}
+{% block content %}
+<!-- maintenance/clone_component.html -->
+<h4>Clone Component: {{ original_component.component_name }}</h4>
+<form method="post" class="basic-form">
+    {% csrf_token %}
+    {{form|crispy}}
+    <button type="submit" class="btn btn-primary">Clone {{ original_component.component_name }} </button>
+</form>
+
+{% endblock content %}

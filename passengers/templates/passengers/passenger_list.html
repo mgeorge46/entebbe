@@ -1,0 +1,102 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Passenger List{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Passengers{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}List{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+
+</style>
+
+<form action="" method="GET">
+    <div class="row">
+        <div class="row col-md-2">
+            <select class="form-control" id="page_size" name="page_size" >
+                <option value="2">2</option>
+                <option value="1">1</option>
+                <option value="30">30</option>
+                <option selected value="50">50</option>
+            </select>
+
+        </div>
+        <button class="btn btn-success" type="submit" value="Filter">Filter</button>
+        <div class="row col-md-6">
+            &nbsp; &nbsp;<input class="form-control col-6" name="search_query" value="{{ search_query }}" placeholder="National ID or Passport Number"
+                                type="text" value="{{ request.GET.search }}">&nbsp;&nbsp;
+            <button class="btn  btn-square btn-secondary" type="submit"> Search</button>
+
+        </div>
+
+        <div>
+            <a class="btn btn-rounded btn-primary" href="{%url 'passenger_create' %}" type="button"><span
+                    class="btn-icon-left text-info">
+                <i class="fa fa-plus color-info"></i>
+            </span>Add a Passenger</a>
+        </div>
+    </div>
+</form><br>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Full Name</th>
+        <th>Gender</th>
+        <th>Date of Birth</th>
+        <th>Nationality</th>
+        <th>Recent flight</th>
+        <th>Date Created</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for passenger in passengers %}
+    <tr>
+        <td>{{ passenger.full_name }}</td>
+        <td>{{ passenger.gender }}</td>
+        <td>{{ passenger.date_of_birth }}</td>
+        <td>{{ passenger.nationality }}</td>
+        <td>
+
+        </td>
+        <td>{{ passenger.record_date }}</td>
+        <td><a href="{%url 'passenger_details' passenger.id  %}">
+            <button class="btn btn-outline-success" type="button">View</button>
+        </a>
+            <a href="{%url 'passenger_update' passenger.id  %}">
+                <button class="btn btn-outline-secondary" type="button">Edit</button>
+            </a>
+            <a href="#">
+                <button class="btn btn-outline-danger" type="button">Delete</button>
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock content %}

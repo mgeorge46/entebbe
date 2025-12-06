@@ -1,0 +1,51 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Update a Scheduled Flight{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Flight{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Update{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<script>
+function toggleReturnFields() {
+    var tripType = document.getElementById('id_trip_type').value;
+    var returnFields = document.getElementsByClassName('return-field');
+
+    if (tripType === 'round-trip') {
+        for (var i = 0; i < returnFields.length; i++) {
+            returnFields[i].style.display = 'block';
+            returnFields[i].setAttribute('required', true);
+            returnFields[i].previousElementSibling.style.display = 'inline-block';
+        }
+    } else {
+        for (var i = 0; i < returnFields.length; i++) {
+            returnFields[i].style.display = 'none';
+            returnFields[i].removeAttribute('required');
+            returnFields[i].previousElementSibling.style.display = 'none';
+        }
+    }
+}
+
+// Call the toggleReturnFields function initially to set the initial state of the fields
+toggleReturnFields();
+</script>
+  <form method="POST">
+    {% csrf_token %}
+    {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {% for field_errors in form.errors.values %}
+                {% for error in field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+    {{ form}}
+      <br>
+       <a href="{% url 'flight_list' %}" name="cancel" class="btn btn-warning">Cancel</a>
+    <button type="submit" name="submit" class = "btn btn-primary">Update a Flight</button>
+  </form>
+
+
+{% endblock content %}

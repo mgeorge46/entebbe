@@ -1,0 +1,17 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Update Aircraft Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Update{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy}}
+    <button type="submit" class="btn btn-success">Update<span class="btn-icon-right"><i class="fa fa-check"></i></span></button>
+    <a href="{% url 'list_aircraft' %}" name="cancel" class="btn btn-warning">Cancel</a>
+</form>
+
+{% endblock content %}

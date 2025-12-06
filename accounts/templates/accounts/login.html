@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Entebbe Airways</title>
+    <!-- Favicon icon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon.png">
+    <link href="/static/css/style.css" rel="stylesheet">
+
+    <style>
+        .login-bg {
+            background-image: url("/static/images/login_cover.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+
+<body class="h-100 login-bg">
+    <div class="authincation h-100">
+        <div class="container-fluid h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-6">
+                    <div class="authincation-content">
+                        <div class="row no-gutters">
+                            <div class="col-xl-12">
+                                {% block content %}{% endblock content %}
+                                <div class="auth-form">
+
+                                    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>{{message}}</strong>
+        <button aria-label="Close" class="close" data-dismiss="alert" type="button"><span
+                aria-hidden="true">×</span></button>
+    </div>
+
+    {% endfor %}
+    {% endif %}
+                                    <h4 class="text-center mb-4">Entebbe Airways Sign in your account</h4>
+                                    <form role="form" method="post" action="">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <label><strong>Username</strong></label>
+                                            <input type="text" class="form-control" id="username" name="username" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><strong>Password</strong></label>
+                                            <input class="form-control" type="password" id="password" name="password" required>
+                                        </div>
+                                        <div class="form-row d-flex justify-content-between mt-4 mb-2">
+                                            <div class="form-group">
+                                                <div class="form-check ml-2">
+                                                    <input class="form-check-input" type="checkbox" id="basic_checkbox_1">
+                                                    <label class="form-check-label" for="basic_checkbox_1">Remember me</label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <a href="{% url 'password_reset' %}">Forgot Password?</a>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" name="login"  class="btn btn-primary btn-block">Sign me in</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    <script src="/static/vendor/global/global.min.js"></script>
+    <script src="/static/js/quixnav-init.js"></script>
+    <script src="/static/js/custom.min.js"></script>
+
+</body>
+
+</html>

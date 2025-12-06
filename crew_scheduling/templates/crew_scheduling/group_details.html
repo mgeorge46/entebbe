@@ -1,0 +1,22 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Passenger Group Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Passenger{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Groups{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}Details{% endblock breadtext4 %}
+{% block content %}
+  <p><strong>Group Name:</strong> {{ object.group_name }}</p>
+  <p><strong>Group Status:</strong> {{ object.group_status }}</p>
+  <p><strong>Passengers:</strong></p>
+  <ul>
+    {% for passenger in object.passengers_ids.all %}
+      <li>{{ passenger }}</li>
+    {% endfor %}
+  </ul>
+<a href="{% url 'group_list' %}"><button class="btn btn-warning" type="Cancel">Cancel</button></a>
+<a href="{% url 'booking_update' group_details.id %}"><button type="button" class="btn btn-outline-secondary">Edit</button></a>
+<a href="#"><button class="btn btn-danger" type="button">Delete</button></a>
+<a href="{% url 'group_list' %}"><button class="btn btn-info" type="Cancel">Print</button></a>
+{% endblock content %}
