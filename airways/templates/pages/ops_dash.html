@@ -1,0 +1,132 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Entebbe Airways Enterprise Resource Planning{% endblock greetings %}
+{% block dashcontent %}
+
+
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'flight_list' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-plane text-secondary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Flights</div>
+                 <div class="stat-text">Create,List, Re-Schedule</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'flight_calendar' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-calendar text-danger border-danger"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Whiteboard</div>
+                <div class="stat-text">Planning Calender</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'manage_crew_scheduling' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-users text-success border-success"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Crew</div>
+                <div class="stat-text">Manage & Scheduling</div>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'passenger_list' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-suitcase text-warning border-warning"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Passengers</div>
+                <div class="stat-text">Customer & Contacts</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'flight_list' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-layout-media-overlay text-primary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Reports</div>
+                <div class="stat-text">Flights & Maintenance</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'list_aircraft' %}';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-medkit text-danger border-danger"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Maintenance</div>
+                <div class="stat-text"> Manage Aircraft</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='#';" style="cursor: pointer;" >
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-globe text-success border-success"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Airports</div>
+                <div class="stat-text"> Manage Aircraft</div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-8" onclick="window.location.href='{% url 'user_list' %}';" style="cursor: pointer;" >
+    <div class="card" >
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-support text-warning border-warning"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Admin</div>
+                <div class="stat-text">Users and Security</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-4 col-sm-8">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="fa fa-shield text-primary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-digit">Help</div>
+                <div class="stat-text">Guides and Suggestions</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock dashcontent %}
+{% block content %}
+
+
+{% endblock content %}

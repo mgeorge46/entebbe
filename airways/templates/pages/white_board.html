@@ -1,0 +1,97 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Whiteboard{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Booking{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Flight{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+<! -- Whiteboard Related CSS--->
+<link href="/static/tui_calendar/css/tui-time-picker.min.css" rel="stylesheet">
+<link href="/static/tui_calendar/css/tui-date-picker.min.css" rel="stylesheet">
+<link href="/static/tui_calendar/css/toastui-calendar.css" rel="stylesheet">
+<link href="/static/tui_calendar/css/reset.css" rel="stylesheet">
+<link href="/static/tui_calendar/css/app.css" rel="stylesheet">
+<link href="/static/tui_calendar/css/icons.css" rel="stylesheet">
+
+<article class="content">
+    <aside class="sidebar">
+        <div class="sidebar-item">
+            <input class="checkbox-all" type="checkbox" id="all" value="all" checked="">
+            <label class="checkbox checkbox-all" for="all">View all</label>
+        </div>
+        <hr>
+        <div class="sidebar-item">
+            <input type="checkbox" id="1" value="1" checked="">
+            <label class="checkbox checkbox-calendar checkbox-1" for="1">Flights</label>
+        </div>
+        <div class="sidebar-item">
+            <input type="checkbox" id="2" value="2" checked="">
+            <label class="checkbox checkbox-calendar checkbox-2" for="2">Crew</label>
+        </div>
+        <div class="sidebar-item">
+            <input type="checkbox" id="3" value="3" checked="">
+            <label class="checkbox checkbox-calendar checkbox-3" for="3">Maintenance</label>
+        </div>
+        <div class="sidebar-item">
+            <input type="checkbox" id="4" value="4" checked="">
+            <label class="checkbox checkbox-calendar checkbox-4" for="4">Friends</label>
+        </div>
+        <div class="sidebar-item">
+            <input type="checkbox" id="5" value="5" checked="">
+            <label class="checkbox checkbox-calendar checkbox-5" for="5">Travel</label>
+        </div>
+        <hr>
+        
+    </aside>
+    <section class="app-column">
+        <nav class="navbar">
+            <div class="dropdown">
+                <div class="dropdown-trigger">
+                    <button class="button is-rounded" aria-haspopup="true" aria-controls="dropdown-menu">
+                        <span class="button-text"></span>
+                        <span class="dropdown-icon toastui-calendar-icon toastui-calendar-ic-dropdown-arrow"></span>
+                    </button>
+                </div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-content">
+                        <a href="#" class="dropdown-item" data-view-name="month">Monthly</a>
+                        <a href="#" class="dropdown-item" data-view-name="week">Weekly</a>
+                        <a href="#" class="dropdown-item" data-view-name="day">Daily</a>
+                    </div>
+                </div>
+            </div>
+            <button class="button is-rounded today">Today</button>
+            <button class="button is-rounded prev">
+                <img alt="prev" src="/static/tui_calendar/imgs/ic-arrow-line-left.png" srcset="
+                  /static/tui_calendar/imgs/ic-arrow-line-left@2x.png 2x,
+                  /static/tui_calendar/imgs/ic-arrow-line-left@3x.png 3x
+                ">
+            </button>
+            <button class="button is-rounded next">
+                <img alt="prev" src="/static/tui_calendar/imgs/ic-arrow-line-right.png" srcset="
+                  /static/tui_calendar/imgs/ic-arrow-line-right@2x.png 2x,
+                  /static/tui_calendar/imgs/ic-arrow-line-right@3x.png 3x
+                ">
+            </button>
+            <span class="navbar--range"></span>
+            <div class="nav-checkbox">
+                <input class="checkbox-collapse" type="checkbox" id="collapse" value="collapse">
+                <label for="collapse">Collapse duplicate events and disable the detail popup</label>
+            </div>
+        </nav>
+        <main id="app"></main>
+    </section>
+</article>
+
+<script src="/static/tui_calendar/js/moment.min.js"></script>
+<script src="/static/tui_calendar/js/chance.min.js"></script>
+<script src="/static/tui_calendar/js/tui-time-picker.min.js"></script>
+<script src="/static/tui_calendar/js/tui-date-picker.min.js"></script>
+<script src="/static/tui_calendar/js/toastui-calendar.ie11.min.js"></script>
+<script src="/static/tui_calendar/js/mock-data.js"></script>
+<script src="/static/tui_calendar/js/utils.js"></script>
+<script src="/static/tui_calendar/js/app.js" ></script>
+
+{% endblock content %}

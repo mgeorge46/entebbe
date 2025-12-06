@@ -1,0 +1,113 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Whiteboard{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Operations{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Whiteboard{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}View{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+{% block content %}
+
+<!-- Container for the calendar -->
+<div id="calendar" style="height: 800px;"></div>
+
+<!-- Scripts -->
+<script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
+<script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.ie11.min.js"></script>
+<script>
+    const Calendar = tui.Calendar;
+    const container = document.getElementById('calendar');
+    const options = {
+        defaultView: 'week',
+        timezone: {
+            zones: [
+                {
+                    timezoneName: 'Asia/Seoul',
+                    displayLabel: 'Seoul',
+                },
+                {
+                    timezoneName: 'Europe/London',
+                    displayLabel: 'London',
+                },
+            ],
+        },
+        calendars: [
+            {
+                id: 'cal1',
+                name: 'Personal',
+                backgroundColor: '#03bd9e',
+            },
+            {
+                id: 'cal2',
+                name: 'Work',
+                backgroundColor: '#00a9ff',
+            },
+        ],
+    };
+
+    const calendar = new Calendar(container, options);
+
+    calendar.createEvents([
+        {
+            id: 'event1',
+            calendarId: 'cal2',
+            title: 'Weekly meeting',
+            start: '2023-09-13T09:00:00',
+            end: '2023-09-13T10:00:00',
+        },
+        {
+            id: 'event2',
+            calendarId: 'cal1',
+            title: 'Lunch appointment',
+            start: '2023-09-12T12:00:00',
+            end: '2023-09-12T13:00:00',
+        },
+        {
+            id: 'event3',
+            calendarId: 'cal2',
+            title: 'Vacation',
+            start: '2023-09-11',
+            end: '2023-09-12',
+            isAllday: true,
+            category: 'allday',
+        },
+    ]);
+    calendar.setOptions({
+      useFormPopup: true,
+      useDetailPopup: true,
+    });
+    calendar.setTheme({
+        common: {
+          gridSelection: {
+            backgroundColor: 'rgba(81, 230, 92, 0.05)',
+            border: '1px dotted #515ce6',
+          },
+        },
+    });
+    function formatTime(time) {
+      const hours = `${time.getHours()}`.padStart(2, '0');
+      const minutes = `${time.getMinutes()}`.padStart(2, '0');
+
+      return `${hours}:${minutes}`;
+    }
+
+    calendar.setOptions({
+      template: {
+        time(event) {
+          const { start, end, title } = event;
+
+          return `<span style="color: white;">${formatTime(start)}~${formatTime(end)} ${title}</span>`;
+        },
+        allday(event) {
+          return `<span style="color: gray;">${event.title}</span>`;
+        },
+      },
+    });
+    calendar.on('clickEvent', ({ event }) => {
+      const el = document.getElementById('clicked-event');
+      el.innerText = event.title;
+    });
+</script>
+
+{% endblock content %}
+
