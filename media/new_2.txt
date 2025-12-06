@@ -1,0 +1,66 @@
+MESSAGE_TYPE = [
+    ('OTP', 'OTP'),
+    ('Human', 'Human'),
+    ('Alert', 'Alert'),
+]
+
+CONFIRMATION = [
+    ('Not_Required', 'Not_Required'),
+    ('Confirmed', 'Confirmed'),
+    ('Not_Matched', 'Not_Matched'),
+    ('Pending', 'Pending'),
+    ('Discarded', 'Discarded')
+]
+
+OTP_OPTIONS = [
+    ('Normal', 'Normal'),
+    ('Active', 'Active'),
+    ('Verified', 'Verified'),
+    ('Discarded', 'Discarded'),
+    ('Expired', 'Expired'),
+    ('Faulted', 'Faulted')
+]
+
+NUMBERCHOICE = [
+    ('Primary', 'Primary'),
+    ('Secondary', 'Secondary'),
+
+]
+
+SMSCAMPAIGN = [
+    ('None', 'None'),
+    ('OTP', 'OTP'),
+
+]
+
+class Sms_Record(models.Model):
+    customer = models.ForeignKey(Customer, db_index=True, on_delete=models.CASCADE)
+    message = models.CharField(_('Message'), max_length=160, blank=False, null=False)
+    message_type = models.CharField(_('Message Type'), max_length=160, blank=False, null=False, choices=MESSAGE_TYPE,
+                                    default='Human')
+    organization_name = models.CharField(_('Message'), max_length=160, blank=False, null=False,
+                                         default='Exquisite_Solutions')
+    otp_confirmation = models.CharField(_('OTP Confirmation'), max_length=160, blank=False, null=False,
+                                        choices=CONFIRMATION, default='Not_Required')
+    otp_status = models.CharField(_('OTP Status'), max_length=160, blank=False, null=False,
+                                  choices=OTP_OPTIONS, default='Normal')
+    date_sent = models.DateTimeField(_('Sent Created'), auto_now_add=True, blank=False, null=False)
+    sent_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sms_sent_by')
+    date_updated = models.DateTimeField(_('Date Updated'), null=True, blank=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sms_updated_by', null=True, blank=True)
+    delivery_status = models.CharField(_('Delivery Status'), max_length=160, blank=False, null=False,
+                                       choices=OTP_OPTIONS, default='Normal')
+    sms_tid = models.CharField(_('Aggregator ID'), max_length=160, blank=False, null=False,
+                               default='Waiting on Aggregator')
+    number_used = models.CharField(_('Number Used'), max_length=20, blank=False, null=True, default='Primary',
+                                   choices=NUMBERCHOICE)
+    campaign_name = models.CharField(_('Campaign'), max_length=20, blank=False, null=True, default='None',
+                                   choices=SMSCAMPAIGN)
+
+    def __str__(self):
+        return f'{self.customer.fname}-{self.customer.lname} - {self.customer.phone_number}-{self.date_sent}'
+
+
+using celery implement and Django's built-in database backend creat  a task that updates any Record of the Sms_Record model whose otp_status value has been Active for the last 24 hours 
+then updated to expired.
+
