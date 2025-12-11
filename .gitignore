@@ -3,3 +3,7 @@
 # Ignore Python bytecode
 __pycache__/
 *.py[cod]
+```
+# Static files
+/static/
+```

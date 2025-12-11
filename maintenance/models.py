@@ -4,6 +4,8 @@ from django.utils.translation import gettext as _
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone as dj_timezone
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 COMPONENT_STATUS = (('Attached', 'Attached'), ('Detached', 'Detached'), ('Stores', 'Stores'))
 MAINTENANCE_TYPE = (('Class_A', 'Class A'), ('Class_B', 'Class B'), ('Class_C', 'Class C'), ('Class_D', 'Class D'))
@@ -125,6 +127,7 @@ class AircraftMaintenance(models.Model):
                                                   default=0, blank=False, null=False)
     start_date = models.DateTimeField(_('Start Date'), blank=False, null=False)
     end_date = models.DateTimeField(_('End Date'), blank=False, null=False)
+    next_maintenance_date = models.DateTimeField(_('Recommended Next Date'), blank=True, null=True)
     remarks = models.TextField(_('Maintenance Remarks'), blank=False, null=False, max_length=500, )
     maintenance_report = models.FileField(_('Maintenance Report'), blank=False, null=False)
     record_date = models.DateTimeField(default=timezone.now)
@@ -179,6 +182,10 @@ class Component(ComponentValidationMixin, models.Model):
     updated_date = models.DateTimeField(_('Updated Date'), blank=True, null=True)
     update_comments = models.CharField(_('Update Comments'), max_length=500, null=True, blank=True)
     updated_by = models.CharField(_('Updated By'), max_length=50, blank=True)
+    next_maintenance_date = models.DateTimeField(_('Recommended Next Date'), blank=True, null=True)
+
+    # Add reverse relation for maintenance records
+    maintenance_records = GenericRelation('ComponentMaintenance', related_query_name='component')
 
     class Meta:
         abstract = True
@@ -201,19 +208,148 @@ class Component(ComponentValidationMixin, models.Model):
 class AircraftMainComponent(Component):
     aircraft_attached = models.ForeignKey(Aircraft, on_delete=models.CASCADE, verbose_name='Aircraft Main Components')
 
+    class Meta:
+        verbose_name = _('Aircraft Main Component')
+        verbose_name_plural = _('Aircraft Main Components')
+
 
 class AircraftSubComponent(Component):
     parent_component = models.ForeignKey(AircraftMainComponent, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _('Aircraft Sub Component')
+        verbose_name_plural = _('Aircraft Sub Components')
 
 
 class AircraftSub2Component(Component):
     parent_sub_component = models.ForeignKey(AircraftSubComponent, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = _('Aircraft Sub2 Component')
+        verbose_name_plural = _('Aircraft Sub2 Components')
+
 
 class AircraftSub3Component(Component):
     parent_sub2_component = models.ForeignKey(AircraftSub2Component, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = _('Aircraft Sub3 Component')
+        verbose_name_plural = _('Aircraft Sub3 Components')
 
+
+class ComponentMaintenance(models.Model):
+    """
+    Tracks maintenance for all component types using GenericForeignKey.
+    Can be used for AircraftMainComponent, AircraftSubComponent, 
+    AircraftSub2Component, and AircraftSub3Component.
+    """
+    main_type_schedule = models.CharField(_('Maintenance Type'), max_length=100, choices=MAINTENANCE_STATUS)
+    
+    # Generic relation to any component type
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    component_to_maintain = GenericForeignKey('content_type', 'object_id')
+    
+    maintenance_type = models.CharField(_('Maintenance Type'), max_length=100, choices=MAINTENANCE_TYPE)
+    maintenance_hours = models.DecimalField(_('Maintenance Hours'), max_digits=10, decimal_places=2, default=0,
+                                            blank=False, null=False)
+    maintenance_hours_added = models.DecimalField(_('Maintenance Hours Added'), max_digits=10, decimal_places=2,
+                                                  default=0, blank=False, null=False)
+    start_date = models.DateTimeField(_('Start Date'), blank=False, null=False)
+    end_date = models.DateTimeField(_('End Date'), blank=False, null=False)
+    remarks = models.TextField(_('Maintenance Remarks'), blank=False, null=False, max_length=500)
+    maintenance_report = models.FileField(_('Maintenance Report'), blank=False, null=False)
+    record_date = models.DateTimeField(default=timezone.now)
+    added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    updated_date = models.DateTimeField(_('Updated Date'), blank=True, null=True)
+    update_comments = models.CharField(_('Update Comments'), max_length=500, null=True, blank=True)
+    updated_by = models.CharField(_('Updated By'), max_length=50, blank=True)
+
+    class Meta:
+        verbose_name = _('Component Maintenance')
+        verbose_name_plural = _('Component Maintenances')
+        ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['start_date']),
+        ]
+
+    def __str__(self):
+        return f'{self.component_to_maintain} - {self.maintenance_type} ({self.start_date.date()})'
+
+    # Helper properties to identify component type
+    @property
+    def component_type_name(self):
+        """Returns human-readable component type name"""
+        model_name = self.content_type.model
+        type_map = {
+            'aircraftmaincomponent': 'Main Component',
+            'aircraftsubcomponent': 'Sub Component',
+            'aircraftsub2component': 'Sub2 Component',
+            'aircraftsub3component': 'Sub3 Component',
+        }
+        return type_map.get(model_name, 'Unknown Component')
+
+    @property
+    def component_level(self):
+        """Returns the component hierarchy level with description"""
+        model_name = self.content_type.model
+        level_map = {
+            'aircraftmaincomponent': 'Level 0 - Main Component',
+            'aircraftsubcomponent': 'Level 1 - Sub Component',
+            'aircraftsub2component': 'Level 2 - Sub Component',
+            'aircraftsub3component': 'Level 3 - Sub Component',
+        }
+        return level_map.get(model_name, 'Unknown Level')
+
+    @property
+    def is_main_component(self):
+        """Check if maintenance is for a main component"""
+        return self.content_type.model == 'aircraftmaincomponent'
+
+    @property
+    def is_sub_component(self):
+        """Check if maintenance is for a sub component (level 1)"""
+        return self.content_type.model == 'aircraftsubcomponent'
+
+    @property
+    def is_sub2_component(self):
+        """Check if maintenance is for a sub2 component (level 2)"""
+        return self.content_type.model == 'aircraftsub2component'
+
+    @property
+    def is_sub3_component(self):
+        """Check if maintenance is for a sub3 component (level 3)"""
+        return self.content_type.model == 'aircraftsub3component'
+
+    @property
+    def component_hierarchy_level(self):
+        """Returns numeric hierarchy level (0-3)"""
+        model_name = self.content_type.model
+        level_map = {
+            'aircraftmaincomponent': 0,
+            'aircraftsubcomponent': 1,
+            'aircraftsub2component': 2,
+            'aircraftsub3component': 3,
+        }
+        return level_map.get(model_name, -1)
+
+    def get_component_model_class(self):
+        """Returns the actual model class of the component"""
+        return self.content_type.model_class()
+
+    def get_component_details(self):
+        """Returns a dictionary with component type information"""
+        return {
+            'type_name': self.component_type_name,
+            'level': self.component_hierarchy_level,
+            'level_description': self.component_level,
+            'model_name': self.content_type.model,
+            'is_main': self.is_main_component,
+            'is_sub': self.is_sub_component,
+            'is_sub2': self.is_sub2_component,
+            'is_sub3': self.is_sub3_component,
+        }
 class CommonTechLogInfo(models.Model):
     aircraft = models.ForeignKey('Aircraft', on_delete=models.CASCADE, verbose_name="Aircraft", blank=True, null=True)
     off_block = models.CharField(_('Off Block'), max_length=50, blank=True)
