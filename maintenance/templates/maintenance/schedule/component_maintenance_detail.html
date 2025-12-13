@@ -1,0 +1,270 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Component Maintenance Details{% endblock greetings %}
+{% block content %}
+
+<style>
+    .status-badge {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 16px;
+        display: inline-block;
+    }
+    
+    .status-scheduled { background: #ffc107; color: #000; }
+    .status-in-progress { background: #17a2b8; color: #fff; }
+    .status-completed { background: #28a745; color: #fff; }
+    .status-cancelled { background: #dc3545; color: #fff; }
+    
+    .info-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+        margin-bottom: 15px;
+    }
+    
+    .completion-info {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+    }
+    
+    .level-badge {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .level-0 { background-color: #dc3545; color: white; }
+    .level-1 { background-color: #fd7e14; color: white; }
+    .level-2 { background-color: #ffc107; color: black; }
+    .level-3 { background-color: #28a745; color: white; }
+</style>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa fa-wrench"></i> Maintenance Schedule Details
+            </h5>
+            <span class="status-badge status-{{ maintenance.maintenance_status|lower|cut:' ' }}">
+                {{ maintenance.maintenance_status|default:"Scheduled" }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Component Information -->
+        <div class="info-card">
+            <h6>
+                <span class="level-badge level-{{ maintenance.component_hierarchy_level }}">
+                    {{ maintenance.component_level }}
+                </span>
+                <strong>{{ maintenance.component_to_maintain.component_name }}</strong>
+            </h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        <strong>Serial Number:</strong> {{ maintenance.component_to_maintain.serial_number }}<br>
+                        <strong>Part Number:</strong> {{ maintenance.component_to_maintain.part_number }}<br>
+                        <strong>Location:</strong> {{ maintenance.component_to_maintain.component_location|default:"N/A" }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        <strong>Aircraft:</strong>
+                        {% if maintenance.is_main_component %}
+                            <a href="{% url 'aircraft_detail' maintenance.component_to_maintain.aircraft_attached.registration_number %}">
+                                {{ maintenance.component_to_maintain.aircraft_attached.abbreviation }}
+                            </a>
+                        {% elif maintenance.is_sub_component %}
+                            <a href="{% url 'aircraft_detail' maintenance.component_to_maintain.parent_component.aircraft_attached.registration_number %}">
+                                {{ maintenance.component_to_maintain.parent_component.aircraft_attached.abbreviation }}
+                            </a>
+                        {% elif maintenance.is_sub2_component %}
+                            <a href="{% url 'aircraft_detail' maintenance.component_to_maintain.parent_sub_component.parent_component.aircraft_attached.registration_number %}">
+                                {{ maintenance.component_to_maintain.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                            </a>
+                        {% elif maintenance.is_sub3_component %}
+                            <a href="{% url 'aircraft_detail' maintenance.component_to_maintain.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached.registration_number %}">
+                                {{ maintenance.component_to_maintain.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                            </a>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Batch Information -->
+        {% if is_batch %}
+        <div class="alert alert-info">
+            <i class="fa fa-layer-group"></i>
+            <strong>Part of Batch:</strong>
+            <a href="{% url 'batch_maintenance_view' batch_id %}">{{ batch_id }}</a>
+            {% if batch_records %}
+            ({{ batch_records.count|add:1 }} components total)
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Scheduled Information -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <h6><i class="fa fa-calendar"></i> Scheduled Maintenance</h6>
+                    <p class="mb-1">
+                        <strong>Type:</strong> {{ maintenance.get_maintenance_type_display }}<br>
+                        <strong>Schedule:</strong> 
+                        {% if maintenance.main_type_schedule == 'Operational' %}📋 Manual{% else %}🤖 Automated{% endif %}<br>
+                        <strong>Start:</strong> {{ maintenance.start_date|date:"Y-m-d H:i" }}<br>
+                        <strong>End:</strong> {{ maintenance.end_date|date:"Y-m-d H:i" }}
+                    </p>
+                </div>
+                
+                <div class="info-card">
+                    <h6><i class="fa fa-clock-o"></i> Hours Information</h6>
+                    <p class="mb-0">
+                        <strong>Hours at Schedule:</strong> {{ maintenance.maintenance_hours }} hrs<br>
+                        <strong>Current Component Hours:</strong> {{ maintenance.component_to_maintain.maintenance_hours }} hrs<br>
+                        <strong>Planned Hours to Add:</strong> {{ maintenance.maintenance_hours_added }} hrs
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <!-- Completion Information (if completed) -->
+                {% if maintenance.maintenance_status == 'Completed' %}
+                <div class="info-card completion-info">
+                    <h6><i class="fa fa-check-double"></i> Completion Information</h6>
+                    <p class="mb-1">
+                        <strong>Completed On:</strong> {{ maintenance.completion_date|date:"Y-m-d H:i" }}<br>
+                        <strong>Completed By:</strong> {{ maintenance.completed_by.get_full_name|default:maintenance.completed_by.username }}<br>
+                        <strong>Actual End:</strong> {{ maintenance.actual_end_date|date:"Y-m-d H:i" }}<br>
+                        <strong>Hours Added:</strong> <span class="text-success">+{{ maintenance.actual_hours_added }} hrs</span>
+                    </p>
+                </div>
+                
+                {% if maintenance.completion_remarks %}
+                <div class="info-card completion-info">
+                    <h6><i class="fa fa-comment"></i> Completion Remarks</h6>
+                    <p class="mb-0">{{ maintenance.completion_remarks|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                {% if maintenance.completion_report %}
+                <div class="info-card completion-info">
+                    <h6><i class="fa fa-file-pdf-o"></i> Completion Report</h6>
+                    <a href="{{ maintenance.completion_report.url }}" class="btn btn-sm btn-success" download>
+                        <i class="fa fa-download"></i> Download Report
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fa fa-hourglass-half"></i>
+                    <strong>Pending Completion</strong><br>
+                    This maintenance has not been signed off yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <hr>
+        
+        <!-- Planned Work -->
+        <div class="info-card">
+            <h6><i class="fa fa-tasks"></i> Planned Maintenance Work</h6>
+            <p class="mb-0">{{ maintenance.remarks|linebreaks }}</p>
+        </div>
+        
+        {% if maintenance.update_comments and not 'MAINT-' in maintenance.update_comments %}
+        <div class="info-card">
+            <h6><i class="fa fa-pencil"></i> Update Comments</h6>
+            <p class="mb-0">{{ maintenance.update_comments|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        {% if maintenance.maintenance_report %}
+        <div class="info-card">
+            <h6><i class="fa fa-file"></i> Initial Planning Document</h6>
+            <a href="{{ maintenance.maintenance_report.url }}" class="btn btn-sm btn-info" download>
+                <i class="fa fa-download"></i> Download
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- Record Information -->
+        <div class="info-card">
+            <small class="text-muted">
+                <strong>Created By:</strong> {{ maintenance.added_by.get_full_name|default:maintenance.added_by.username }} 
+                on {{ maintenance.record_date|date:"Y-m-d H:i" }}
+                {% if maintenance.updated_by %}
+                <br><strong>Updated By:</strong> {{ maintenance.updated_by }} on {{ maintenance.updated_date|date:"Y-m-d H:i" }}
+                {% endif %}
+            </small>
+        </div>
+        
+        <hr>
+        
+        <!-- Action Buttons -->
+        <div class="btn-toolbar" role="toolbar">
+            <div class="btn-group mr-2" role="group">
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+            
+            {% if maintenance.maintenance_status != 'Completed' %}
+            <div class="btn-group mr-2" role="group">
+                <a href="{% url 'component_maintenance_update' maintenance.pk %}" class="btn btn-warning">
+                    <i class="fa fa-edit"></i> Edit Schedule
+                </a>
+                <a href="{% url 'complete_component_maintenance' maintenance.pk %}" class="btn btn-success">
+                    <i class="fa fa-check-double"></i> Sign Off / Complete
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if is_batch %}
+            <div class="btn-group mr-2" role="group">
+                <a href="{% url 'batch_maintenance_view' batch_id %}" class="btn btn-info">
+                    <i class="fa fa-layer-group"></i> View Full Batch
+                </a>
+                {% if maintenance.maintenance_status != 'Completed' %}
+                <a href="{% url 'batch_complete_maintenance' batch_id %}" class="btn btn-success">
+                    <i class="fa fa-check-double"></i> Complete Entire Batch
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    <i class="fa fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+        
+        <!-- Batch Members (if applicable) -->
+        {% if is_batch and batch_records %}
+        <hr>
+        <h6><i class="fa fa-users"></i> Other Components in This Batch</h6>
+        <div class="list-group">
+            {% for record in batch_records %}
+            <a href="{% url 'component_maintenance_detail' record.pk %}" class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ record.component_to_maintain.component_name }}</strong><br>
+                        <small class="text-muted">{{ record.component_to_maintain.serial_number }}</small>
+                    </div>
+                    <span class="badge badge-{{ record.maintenance_status|lower|cut:' ' }}">
+                        {{ record.maintenance_status }}
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}

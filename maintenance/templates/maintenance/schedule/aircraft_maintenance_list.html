@@ -1,0 +1,202 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Aircraft Maintenance Schedules{% endblock greetings %}
+{% block text %}View and manage aircraft maintenance schedules{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Schedules{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block content %}
+<style>
+    .manual-schedule {
+        background-color: #fff3cd !important; /* Light yellow for manual */
+    }
+    
+    .automated-schedule {
+        background-color: #d1ecf1 !important; /* Light blue for automated */
+    }
+    
+    .schedule-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .badge-manual {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .badge-automated {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+    
+    .legend-box {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 5px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<!-- Filter Form -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Aircraft</label>
+                <select name="aircraft" class="form-control">
+                    <option value="">All Aircraft</option>
+                    {% for aircraft in aircrafts %}
+                    <option value="{{ aircraft.id }}" {% if request.GET.aircraft == aircraft.id|stringformat:"s" %}selected{% endif %}>
+                        {{ aircraft.abbreviation }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Maintenance Type</label>
+                <select name="maintenance_type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="Class_A" {% if request.GET.maintenance_type == "Class_A" %}selected{% endif %}>Class A</option>
+                    <option value="Class_B" {% if request.GET.maintenance_type == "Class_B" %}selected{% endif %}>Class B</option>
+                    <option value="Class_C" {% if request.GET.maintenance_type == "Class_C" %}selected{% endif %}>Class C</option>
+                    <option value="Class_D" {% if request.GET.maintenance_type == "Class_D" %}selected{% endif %}>Class D</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Schedule Type</label>
+                <select name="schedule_type" class="form-control">
+                    <option value="">All</option>
+                    <option value="Operational" {% if request.GET.schedule_type == "Operational" %}selected{% endif %}>Manual</option>
+                    <option value="Maintenance" {% if request.GET.schedule_type == "Maintenance" %}selected{% endif %}>Automated</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">From Date</label>
+                <input type="date" name="start_date_from" class="form-control" value="{{ request.GET.start_date_from }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">To Date</label>
+                <input type="date" name="start_date_to" class="form-control" value="{{ request.GET.start_date_to }}">
+            </div>
+            
+            <div class="col-md-12">
+                <input type="text" name="search_term" class="form-control" placeholder="Search aircraft or remarks..." value="{{ request.GET.search_term }}">
+            </div>
+            
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'aircraft_maintenance_list' %}" class="btn btn-secondary">Clear</a>
+                <a href="{% url 'aircraft_maintenance_add' %}" class="btn btn-success float-end">
+                    <i class="fa fa-plus"></i> Schedule New Maintenance
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="card mb-3">
+    <div class="card-body">
+        <strong>Legend:</strong> &nbsp;
+        <span class="legend-box manual-schedule"></span> Manual Schedule &nbsp;
+        <span class="legend-box automated-schedule"></span> Automated Schedule
+    </div>
+</div>
+
+<!-- Maintenance Schedules Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Aircraft</th>
+                        <th>Type</th>
+                        <th>Schedule Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in maintenance_schedules %}
+                    <tr class="{% if schedule.main_type_schedule == 'Operational' %}manual-schedule{% else %}automated-schedule{% endif %}">
+                        <td>
+                            <a href="{% url 'aircraft_detail' schedule.aircraft_to_maintain.registration_number %}">
+                                {{ schedule.aircraft_to_maintain.abbreviation }}
+                            </a>
+                        </td>
+                        <td>{{ schedule.get_maintenance_type_display }}</td>
+                        <td>
+                            <span class="schedule-badge {% if schedule.main_type_schedule == 'Operational' %}badge-manual{% else %}badge-automated{% endif %}">
+                                {% if schedule.main_type_schedule == 'Operational' %}Manual{% else %}Automated{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ schedule.start_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ schedule.end_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ schedule.maintenance_hours }} hrs</td>
+                        <td>{{ schedule.get_main_type_schedule_display }}</td>
+                        <td>
+                            <a href="{% url 'aircraft_maintenance_detail' schedule.pk %}" class="btn btn-sm btn-info">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            <a href="{% url 'aircraft_maintenance_update' schedule.pk %}" class="btn btn-sm btn-warning">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No maintenance schedules found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}

@@ -3,9 +3,10 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 from .models import AircraftMainComponent
 from django.db import transaction
-
 from .models import Aircraft, AircraftMainComponent, AircraftSubComponent, FlightTechLog, AircraftSub3Component, \
     AircraftSub2Component, AircraftMaintenanceTechLog, Airport
+from django.contrib.contenttypes.models import ContentType
+from maintenance.models import (AircraftMaintenance, ComponentMaintenance)
 
 
 class BaseComponentForm(forms.ModelForm):
@@ -157,3 +158,184 @@ class AircraftMaintenanceTechLogForm(forms.ModelForm):
             'arrival_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
 
         }
+
+# manual maintenance  forms
+
+# Aircraft Maintenance Schedule Form
+class AircraftMaintenanceForm(forms.ModelForm):
+    class Meta:
+        model = AircraftMaintenance
+        exclude = ['updated_by', 'updated_date', 'added_by', 'record_date']
+        widgets = {
+            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'next_maintenance_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add CSS classes
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+
+# Component Maintenance Schedule Form
+class ComponentMaintenanceForm(forms.ModelForm):
+    # Component selection fields
+    component_type = forms.ChoiceField(
+        choices=[
+            ('', '---------'),
+            ('aircraftmaincomponent', 'Main Component'),
+            ('aircraftsubcomponent', 'Sub Component Level 1'),
+            ('aircraftsub2component', 'Sub Component Level 2'),
+            ('aircraftsub3component', 'Sub Component Level 3'),
+        ],
+        required=True,
+        label='Component Type'
+    )
+    
+    component_id = forms.ModelChoiceField(
+        queryset=None,  # Will be populated dynamically
+        required=True,
+        label='Select Component'
+    )
+    
+    class Meta:
+        model = ComponentMaintenance
+        exclude = ['updated_by', 'updated_date', 'added_by', 'record_date', 'content_type', 'object_id']
+        widgets = {
+            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        aircraft_id = kwargs.pop('aircraft_id', None)
+        super().__init__(*args, **kwargs)
+        
+        # Add CSS classes
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+        
+        # If aircraft_id is provided, filter components
+        if aircraft_id:
+            self.aircraft_id = aircraft_id
+            # Initial queryset is empty, will be populated via AJAX or on component_type change
+            self.fields['component_id'].queryset = AircraftMainComponent.objects.none()
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Get the component type and ID
+        component_type = self.cleaned_data['component_type']
+        component_id = self.cleaned_data['component_id']
+        
+        # Set the content type and object ID
+        content_type = ContentType.objects.get(model=component_type)
+        instance.content_type = content_type
+        instance.object_id = component_id.id
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
+
+# Search and Filter Forms
+class AircraftMaintenanceSearchForm(forms.Form):
+    SCHEDULE_TYPE = [
+        ('', 'All'),
+        ('Operational', 'Manual'),
+        ('Maintenance', 'Automated'),
+    ]
+    
+    aircraft = forms.ModelChoiceField(
+        queryset=Aircraft.objects.all(),
+        required=False,
+        empty_label='All Aircraft'
+    )
+    
+    maintenance_type = forms.ChoiceField(
+        choices=[('', 'All')] + list(AircraftMaintenance._meta.get_field('maintenance_type').choices),
+        required=False
+    )
+    
+    schedule_type = forms.ChoiceField(
+        choices=SCHEDULE_TYPE,
+        required=False,
+        label='Schedule Type'
+    )
+    
+    start_date_from = forms.DateTimeField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='From Date'
+    )
+    
+    start_date_to = forms.DateTimeField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='To Date'
+    )
+    
+    search_term = forms.CharField(
+        required=False,
+        label='Search',
+        widget=forms.TextInput(attrs={'placeholder': 'Search aircraft or remarks...'})
+    )
+
+
+class ComponentMaintenanceSearchForm(forms.Form):
+    SCHEDULE_TYPE = [
+        ('', 'All'),
+        ('Operational', 'Manual'),
+        ('Maintenance', 'Automated'),
+    ]
+    
+    COMPONENT_LEVEL = [
+        ('', 'All Levels'),
+        ('aircraftmaincomponent', 'Main Component'),
+        ('aircraftsubcomponent', 'Sub Component Level 1'),
+        ('aircraftsub2component', 'Sub Component Level 2'),
+        ('aircraftsub3component', 'Sub Component Level 3'),
+    ]
+    
+    aircraft = forms.ModelChoiceField(
+        queryset=Aircraft.objects.all(),
+        required=False,
+        empty_label='All Aircraft'
+    )
+    
+    component_level = forms.ChoiceField(
+        choices=COMPONENT_LEVEL,
+        required=False,
+        label='Component Level'
+    )
+    
+    maintenance_type = forms.ChoiceField(
+        choices=[('', 'All')] + list(ComponentMaintenance._meta.get_field('maintenance_type').choices),
+        required=False
+    )
+    
+    schedule_type = forms.ChoiceField(
+        choices=SCHEDULE_TYPE,
+        required=False,
+        label='Schedule Type'
+    )
+    
+    start_date_from = forms.DateTimeField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='From Date'
+    )
+    
+    start_date_to = forms.DateTimeField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='To Date'
+    )
+    
+    search_term = forms.CharField(
+        required=False,
+        label='Search',
+        widget=forms.TextInput(attrs={'placeholder': 'Search component name or serial...'})
+    )

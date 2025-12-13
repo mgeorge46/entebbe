@@ -54,17 +54,13 @@
 
                     <li><a class="has-arrow" href="javascript:void()" aria-expanded="false">Aircraft</a>
                         <ul aria-expanded="false">
-                            <li><a href="{% url 'list_aircraft' %}">List </a></li>
-                            <li><a href="#">Maintenance</a></li>
+                            <li><a href="{% url 'maintenance_dashboard' %}">Dashboard </a></li>
+                            <li><a href="{% url 'list_aircraft' %}">List</a></li>
+                            <li><a href="{% url 'aircraft_maintenance_list' %}">Aircraft Schedules </a></li>
+                            <li><a href="{% url 'component_maintenance_list' %}">Component Schedules </a></li>
                         </ul>
                     </li>
-                    <li><a class="has-arrow" href="javascript:void()" aria-expanded="false">Airport</a>
-                        <ul aria-expanded="false">
-                            <li><a href="{%url 'airport_list' %}">List</a></li>
-                            <li><a href="{% url 'airport_add' %}">Add</a></li>
-                            <li><a href="#">Deleted</a></li>
-
-                        </ul>
+                    <li><a href="{%url 'airport_list' %}" aria-expanded="false">Airport</a>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()" aria-expanded="false">Techlogs</a>
                         <ul aria-expanded="false">

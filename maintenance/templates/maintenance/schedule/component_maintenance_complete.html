@@ -1,0 +1,172 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Complete Maintenance - {{ component.component_name }}{% endblock greetings %}
+{% block content %}
+
+<style>
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    
+    .status-scheduled { background: #ffc107; color: #000; }
+    .status-in-progress { background: #17a2b8; color: #fff; }
+    .status-completed { background: #28a745; color: #fff; }
+    
+    .info-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fa fa-check-circle"></i> Sign Off / Complete Maintenance
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Scheduled Maintenance Info -->
+                <div class="info-box">
+                    <h6><i class="fa fa-info-circle"></i> Scheduled Maintenance Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <strong>Component:</strong> {{ component.component_name }}<br>
+                                <strong>Serial Number:</strong> {{ component.serial_number }}<br>
+                                <strong>Maintenance Type:</strong> {{ maintenance.get_maintenance_type_display }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                <strong>Scheduled Start:</strong> {{ maintenance.start_date|date:"Y-m-d H:i" }}<br>
+                                <strong>Scheduled End:</strong> {{ maintenance.end_date|date:"Y-m-d H:i" }}<br>
+                                <strong>Current Hours:</strong> {{ component.maintenance_hours }} hrs
+                            </p>
+                        </div>
+                    </div>
+                    <p class="mb-0">
+                        <strong>Planned Work:</strong><br>
+                        {{ maintenance.remarks }}
+                    </p>
+                </div>
+                
+                <!-- Completion Form -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h6 class="mb-3"><i class="fa fa-clipboard-check"></i> Completion Details</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Actual Start Date</label>
+                                <input type="datetime-local" name="actual_start_date" 
+                                       class="form-control" value="{{ maintenance.start_date|date:'Y-m-d\TH:i' }}">
+                                <small class="text-muted">When did maintenance actually begin?</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Actual End Date <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="actual_end_date" 
+                                       class="form-control" required>
+                                <small class="text-muted">When was maintenance completed?</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Hours to Add Back <span class="text-danger">*</span></label>
+                        <input type="number" name="actual_hours_added" class="form-control" 
+                               step="0.01" min="0" value="0" required>
+                        <small class="text-muted">
+                            <i class="fa fa-calculator"></i> Hours to be added to component after maintenance completion
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Completion Remarks <span class="text-danger">*</span></label>
+                        <textarea name="completion_remarks" class="form-control" rows="4" 
+                                  placeholder="Describe work performed, parts replaced, findings..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upload Completion Report/Documents</label>
+                        <input type="file" name="completion_report" class="form-control-file" 
+                               accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.png">
+                        <small class="text-muted">
+                            <i class="fa fa-paperclip"></i> Upload final maintenance report, photos, or certificates
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>Important:</strong> By signing off, you confirm the maintenance is complete.
+                        The specified hours will be added to the component's maintenance hours.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg btn-block">
+                        <i class="fa fa-check-double"></i> Sign Off & Complete Maintenance
+                    </button>
+                    <a href="{% url 'component_maintenance_detail' maintenance.pk %}" class="btn btn-secondary btn-lg btn-block">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Sidebar - Preview -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fa fa-eye"></i> Preview Changes</h6>
+            </div>
+            <div class="card-body">
+                <p>
+                    <strong>Component:</strong><br>
+                    {{ component.component_name }}
+                </p>
+                <p>
+                    <strong>Current Hours:</strong><br>
+                    <span class="h4">{{ component.maintenance_hours }}</span> hrs
+                </p>
+                <p>
+                    <strong>Hours to Add:</strong><br>
+                    <span class="h4 text-success" id="hours_preview">0</span> hrs
+                </p>
+                <hr>
+                <p>
+                    <strong>New Hours After Completion:</strong><br>
+                    <span class="h3 text-primary" id="new_hours">{{ component.maintenance_hours }}</span> hrs
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview of hours calculation
+document.addEventListener('DOMContentLoaded', function() {
+    const hoursInput = document.querySelector('[name="actual_hours_added"]');
+    const currentHours = parseFloat('{{ component.maintenance_hours }}');
+    
+    if (hoursInput) {
+        hoursInput.addEventListener('input', function() {
+            const hoursToAdd = parseFloat(this.value) || 0;
+            document.getElementById('hours_preview').textContent = hoursToAdd;
+            document.getElementById('new_hours').textContent = (currentHours + hoursToAdd).toFixed(2);
+        });
+    }
+});
+</script>
+
+{% endblock content %}

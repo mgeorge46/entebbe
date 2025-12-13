@@ -1,0 +1,139 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}Update Component Maintenance Schedule{% endblock greetings %}
+{% block text %}Edit maintenance schedule for {{ component.component_name }}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Components{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Update{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block content %}
+<style>
+    .component-info-box {
+        background: #e7f3ff;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .level-badge {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .level-0 { background-color: #dc3545; color: white; }
+    .level-1 { background-color: #fd7e14; color: white; }
+    .level-2 { background-color: #ffc107; color: black; }
+    .level-3 { background-color: #28a745; color: white; }
+</style>
+
+<div class="card">
+    <div class="card-header bg-warning text-white">
+        <h5 class="mb-0">
+            <i class="fa fa-edit"></i> Update Maintenance Schedule
+        </h5>
+    </div>
+    <div class="card-body">
+        <!-- Component Information Display -->
+        <div class="component-info-box">
+            <div class="row">
+                <div class="col-md-8">
+                    <h6>
+                        <span class="level-badge level-{{ object.component_hierarchy_level }}">
+                            {{ object.component_level }}
+                        </span>
+                        <strong>{{ component.component_name }}</strong>
+                    </h6>
+                    <p class="mb-0">
+                        <strong>Serial Number:</strong> {{ component.serial_number }} &nbsp;|&nbsp;
+                        <strong>Part Number:</strong> {{ component.part_number }}<br>
+                        <strong>Aircraft:</strong> 
+                        <a href="{% url 'aircraft_detail' aircraft.registration_number %}">
+                            {{ aircraft.abbreviation }} - {{ aircraft.registration_number }}
+                        </a>
+                    </p>
+                </div>
+                <div class="col-md-4 text-right">
+                    <p class="mb-0">
+                        <small>Current Maintenance Hours:</small><br>
+                        <h4 class="mb-0">{{ component.maintenance_hours }} hrs</h4>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Batch Information (if applicable) -->
+        {% if 'Batch: MAINT-' in object.update_comments %}
+        <div class="alert alert-info">
+            <i class="fa fa-layer-group"></i> 
+            <strong>This is part of a batch schedule.</strong><br>
+            Batch ID: 
+            {% with batch_id=object.update_comments|slice:"7:" %}
+            <a href="{% url 'batch_maintenance_view' batch_id %}">{{ batch_id }}</a>
+            {% endwith %}
+        </div>
+        {% endif %}
+        
+        <!-- Form -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li><strong>{{ field }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+            {% endif %}
+            
+            {{ form|crispy }}
+            
+            <hr>
+            
+            <div class="btn-group" role="group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-check-circle"></i> Update Schedule
+                </button>
+                <a href="{% url 'component_maintenance_detail' object.pk %}" class="btn btn-warning">
+                    <i class="fa fa-times"></i> Cancel
+                </a>
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Validation: ensure end_date is after start_date
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.querySelector('[name="start_date"]');
+    const endDateInput = document.querySelector('[name="end_date"]');
+    
+    if (startDateInput && endDateInput) {
+        endDateInput.addEventListener('change', function() {
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            if (endDate <= startDate) {
+                alert('End date must be after start date');
+                endDateInput.value = '';
+            }
+        });
+    }
+});
+</script>
+
+{% endblock content %}

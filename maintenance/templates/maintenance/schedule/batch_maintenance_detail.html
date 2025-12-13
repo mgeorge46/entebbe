@@ -1,0 +1,199 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Batch Maintenance Details{% endblock greetings %}
+{% block text %}View all maintenance records in this batch{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Batch{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block content %}
+<style>
+    .batch-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .info-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-left: 4px solid #28a745;
+        margin-bottom: 15px;
+    }
+    
+    .component-card {
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        background: white;
+    }
+    
+    .component-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .level-badge {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .level-0 { background-color: #dc3545; color: white; }
+    .level-1 { background-color: #fd7e14; color: white; }
+    .level-2 { background-color: #ffc107; color: black; }
+    .level-3 { background-color: #28a745; color: white; }
+</style>
+
+<!-- Batch Header -->
+<div class="batch-header">
+    <h3><i class="fa fa-layer-group"></i> Batch ID: {{ batch_id }}</h3>
+    <p class="mb-0">
+        <strong>{{ total_records }}</strong> component(s) in this batch &nbsp;|&nbsp;
+        Scheduled: {{ first_record.start_date|date:"F j, Y" }}
+    </p>
+</div>
+
+<!-- Batch Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ total_records }}</h2>
+                <p class="mb-0">Components</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>{{ first_record.get_maintenance_type_display }}</h5>
+                <p class="mb-0">Maintenance Type</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>{{ first_record.start_date|date:"M j" }} - {{ first_record.end_date|date:"M j" }}</h5>
+                <p class="mb-0">Duration</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>
+                    {% if first_record.main_type_schedule == 'Operational' %}
+                    📋 Manual
+                    {% else %}
+                    🤖 Auto
+                    {% endif %}
+                </h5>
+                <p class="mb-0">Schedule Type</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Common Details -->
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="fa fa-info-circle"></i> Batch Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <strong>Start Date:</strong><br>
+                    {{ first_record.start_date|date:"l, F j, Y - H:i" }}
+                </div>
+                
+                <div class="info-card">
+                    <strong>End Date:</strong><br>
+                    {{ first_record.end_date|date:"l, F j, Y - H:i" }}
+                </div>
+                
+                <div class="info-card">
+                    <strong>Scheduled By:</strong><br>
+                    {{ first_record.added_by.get_full_name|default:first_record.added_by.username }}<br>
+                    <small class="text-muted">{{ first_record.record_date|date:"Y-m-d H:i" }}</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="info-card">
+                    <strong>Remarks:</strong><br>
+                    {{ first_record.remarks|linebreaks }}
+                </div>
+                
+                {% if first_record.maintenance_report %}
+                <div class="info-card">
+                    <strong>Report:</strong><br>
+                    <a href="{{ first_record.maintenance_report.url }}" class="btn btn-sm btn-info">
+                        <i class="fa fa-download"></i> Download
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Components in Batch -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0"><i class="fa fa-cog"></i> Components in This Batch</h6>
+    </div>
+    <div class="card-body">
+        {% for type_name, records in grouped_records.items %}
+        <h6 class="mt-3">{{ type_name }}s ({{ records|length }})</h6>
+        <hr>
+        
+        {% for record in records %}
+        <div class="component-card">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <span class="level-badge level-{{ record.component_hierarchy_level }}">
+                        L{{ record.component_hierarchy_level }}
+                    </span>
+                    <strong>{{ record.component_to_maintain.component_name }}</strong><br>
+                    <small class="text-muted">
+                        SN: {{ record.component_to_maintain.serial_number }} | 
+                        PN: {{ record.component_to_maintain.part_number }}
+                    </small>
+                </div>
+                <div class="col-md-3">
+                    <small>Maintenance Hours:</small><br>
+                    <strong>{{ record.maintenance_hours }} hrs</strong><br>
+                    <small class="text-success">+{{ record.maintenance_hours_added }} to add</small>
+                </div>
+                <div class="col-md-3 text-right">
+                    <a href="{% url 'component_maintenance_detail' record.pk %}" class="btn btn-sm btn-info">
+                        <i class="fa fa-eye"></i> Details
+                    </a>
+                    <a href="{% url 'component_maintenance_update' record.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fa fa-edit"></i> Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<br>
+<div class="btn-group" role="group">
+    <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary">
+        <i class="fa fa-arrow-left"></i> Back to List
+    </a>
+    <button class="btn btn-info" onclick="window.print()">
+        <i class="fa fa-print"></i> Print Batch
+    </button>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,280 @@
+{% extends "includes/base_dash.html" %}
+{% block greetings %}Maintenance Dashboard{% endblock greetings %}
+{% block text %}Overview of all scheduled maintenance{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Dashboard{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block dashcontent %}
+<!-- Statistics Cards -->
+<div class="col-lg-3 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-plane text-primary border-primary"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Aircraft Schedules</div>
+                <div class="stat-digit">{{ total_aircraft_schedules }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-settings text-success border-success"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Component Schedules</div>
+                <div class="stat-digit">{{ total_component_schedules }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-hand-stop text-warning border-warning"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Manual Schedules</div>
+                <div class="stat-digit">{{ manual_aircraft|add:manual_component }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-sm-6">
+    <div class="card">
+        <div class="stat-widget-one card-body">
+            <div class="stat-icon d-inline-block">
+                <i class="ti-reload text-info border-info"></i>
+            </div>
+            <div class="stat-content d-inline-block">
+                <div class="stat-text">Automated Schedules</div>
+                <div class="stat-digit">{{ automated_aircraft|add:automated_component }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock dashcontent %}
+
+{% block content %}
+<style>
+    .manual-row {
+        background-color: #fff3cd !important;
+    }
+    
+    .automated-row {
+        background-color: #d1ecf1 !important;
+    }
+    
+    .schedule-badge {
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .badge-manual {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .badge-automated {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+</style>
+
+<!-- Filter Panel -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row">
+            <div class="col-md-4">
+                <label>Aircraft</label>
+                <select name="aircraft" class="form-control">
+                    <option value="">All Aircraft</option>
+                    {% for aircraft in aircrafts %}
+                    <option value="{{ aircraft.id }}" {% if request.GET.aircraft == aircraft.id|stringformat:"s" %}selected{% endif %}>
+                        {{ aircraft.abbreviation }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label>To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary btn-block">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabbed View -->
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a href="#aircraft-tab" class="nav-link active" data-toggle="tab">
+                    <i class="fa fa-plane"></i> Aircraft Maintenance
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#component-tab" class="nav-link" data-toggle="tab">
+                    <i class="fa fa-cog"></i> Component Maintenance
+                </a>
+            </li>
+        </ul>
+        
+        <div class="tab-content">
+            <!-- Aircraft Maintenance Tab -->
+            <div id="aircraft-tab" class="tab-pane active">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Aircraft Maintenance Schedules</h5>
+                    <a href="{% url 'aircraft_maintenance_add' %}" class="btn btn-sm btn-success">
+                        <i class="fa fa-plus"></i> Add Schedule
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Aircraft</th>
+                                <th>Type</th>
+                                <th>Schedule</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Hours</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in aircraft_schedules %}
+                            <tr class="{% if schedule.main_type_schedule == 'Operational' %}manual-row{% else %}automated-row{% endif %}">
+                                <td>
+                                    <a href="{% url 'aircraft_detail' schedule.aircraft_to_maintain.registration_number %}">
+                                        {{ schedule.aircraft_to_maintain.abbreviation }}
+                                    </a>
+                                </td>
+                                <td>{{ schedule.get_maintenance_type_display }}</td>
+                                <td>
+                                    <span class="schedule-badge {% if schedule.main_type_schedule == 'Operational' %}badge-manual{% else %}badge-automated{% endif %}">
+                                        {% if schedule.main_type_schedule == 'Operational' %}Manual{% else %}Auto{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ schedule.start_date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ schedule.end_date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ schedule.maintenance_hours }}</td>
+                                <td>
+                                    <a href="{% url 'aircraft_maintenance_detail' schedule.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No aircraft maintenance schedules</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <a href="{% url 'aircraft_maintenance_list' %}" class="btn btn-outline-primary">
+                    View All Aircraft Schedules <i class="fa fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <!-- Component Maintenance Tab -->
+            <div id="component-tab" class="tab-pane">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Component Maintenance Schedules</h5>
+                    <a href="{% url 'component_maintenance_create' %}" class="btn btn-sm btn-success">
+                        <i class="fa fa-plus"></i> Add Schedule
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Level</th>
+                                <th>Aircraft</th>
+                                <th>Type</th>
+                                <th>Schedule</th>
+                                <th>Start Date</th>
+                                <th>Hours</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in component_schedules %}
+                            <tr class="{% if schedule.main_type_schedule == 'Operational' %}manual-row{% else %}automated-row{% endif %}">
+                                <td>
+                                    <strong>{{ schedule.component_to_maintain.component_name }}</strong><br>
+                                    <small>{{ schedule.component_to_maintain.serial_number }}</small>
+                                </td>
+                                <td>
+                                    <span class="level-badge level-{{ schedule.component_hierarchy_level }}">
+                                        L{{ schedule.component_hierarchy_level }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if schedule.is_main_component %}
+                                        {{ schedule.component_to_maintain.aircraft_attached.abbreviation }}
+                                    {% elif schedule.is_sub_component %}
+                                        {{ schedule.component_to_maintain.parent_component.aircraft_attached.abbreviation }}
+                                    {% elif schedule.is_sub2_component %}
+                                        {{ schedule.component_to_maintain.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                                    {% elif schedule.is_sub3_component %}
+                                        {{ schedule.component_to_maintain.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ schedule.get_maintenance_type_display }}</td>
+                                <td>
+                                    <span class="schedule-badge {% if schedule.main_type_schedule == 'Operational' %}badge-manual{% else %}badge-automated{% endif %}">
+                                        {% if schedule.main_type_schedule == 'Operational' %}Manual{% else %}Auto{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ schedule.start_date|date:"Y-m-d" }}</td>
+                                <td>{{ schedule.maintenance_hours }}</td>
+                                <td>
+                                    <a href="{% url 'component_maintenance_detail' schedule.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">No component maintenance schedules</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-outline-success">
+                    View All Component Schedules <i class="fa fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -4,10 +4,50 @@ from .airport_managment import AirportCreateView, AirportDetailView, AirportList
 from . import views, level_two_three_views
 from .level_two_three_views import Sub2ComponentListView, Sub3ComponentListView, AircraftSub3ComponentDetailView, \
     Sub3ComponentUpdateView
-from .views import AircraftListView, AircraftDetailView, AircraftUpdateView, SubComponentListView, \
-    MainComponentListView, MainComponentUpdateView, SubComponentUpdateView, AircraftMaintenanceTechLogListView, \
-    FlightTechLogListView, \
-    AircraftMaintenanceTechLogUpdateView, AircraftMaintenanceTechLogDetailView
+
+from .views import (
+    #Aircraft Views
+    AircraftListView,
+    AircraftDetailView,
+    AircraftUpdateView,
+    
+    #Component Views
+    SubComponentListView,
+    MainComponentListView,
+    MainComponentUpdateView,
+    SubComponentUpdateView,
+    
+    # TechLog Views
+    AircraftMaintenanceTechLogListView,
+    FlightTechLogListView,
+    AircraftMaintenanceTechLogUpdateView,
+    AircraftMaintenanceTechLogDetailView,
+    
+    # Aircraft Maintenance Scheduling Views
+    AircraftMaintenanceListView,
+    AircraftMaintenanceCreateView,
+    AircraftMaintenanceUpdateView,
+    AircraftMaintenanceDetailView,
+    
+    # Component Maintenance Scheduling Views
+    ComponentMaintenanceListView,
+    component_maintenance_create,
+    ComponentMaintenanceUpdateView,
+    ComponentMaintenanceDetailView,
+    
+    # Helper Views
+    get_components_by_aircraft_and_type,
+    batch_maintenance_view,
+    quick_schedule_component_maintenance,
+    auto_schedule_component_maintenance,
+    maintenance_dashboard,
+    # Two state workflows 
+    complete_component_maintenance,
+    batch_complete_maintenance,
+    search_components_ajax,
+    component_maintenance_create_enhanced,
+)
+
 
 urlpatterns = [
     path('aircraft/add/', views.create_aircraft, name='add_aircraft'),
@@ -77,4 +117,68 @@ urlpatterns = [
     path('airport/detail/<int:pk>/', AirportDetailView.as_view(), name='airport_detail'),
     # Tree List
     path('xxx/dd', views.component_tree_view, name='tree_view'),
+
+      # ==================== MAINTENANCE DASHBOARD ====================
+    path('dashboard/', maintenance_dashboard, name='maintenance_dashboard'),
+    
+    # ==================== AIRCRAFT MAINTENANCE SCHEDULING ====================
+    path('aircraft/schedule/list/', 
+         AircraftMaintenanceListView.as_view(), 
+         name='aircraft_maintenance_list'),
+    
+    path('aircraft/schedule/add/', 
+         AircraftMaintenanceCreateView.as_view(), 
+         name='aircraft_maintenance_add'),
+    
+    path('aircraft/schedule/update/<int:pk>/', 
+         AircraftMaintenanceUpdateView.as_view(), 
+         name='aircraft_maintenance_update'),
+    
+    path('aircraft/schedule/detail/<int:pk>/', 
+         AircraftMaintenanceDetailView.as_view(), 
+         name='aircraft_maintenance_detail'),
+    
+    # ==================== COMPONENT MAINTENANCE SCHEDULING ====================
+    path('component/schedule/list/', 
+         ComponentMaintenanceListView.as_view(), 
+         name='component_maintenance_list'),
+    
+    path('component/schedule/create/', 
+         component_maintenance_create, 
+         name='component_maintenance_create'),
+    
+    path('component/schedule/update/<int:pk>/', 
+         ComponentMaintenanceUpdateView.as_view(), 
+         name='component_maintenance_update'),
+    
+    path('component/schedule/detail/<int:pk>/', 
+         ComponentMaintenanceDetailView.as_view(), 
+         name='component_maintenance_detail'),
+    
+    # Quick schedule from component detail page
+    path('component/<str:model_name>/<int:component_id>/quick-schedule/', 
+         quick_schedule_component_maintenance, 
+         name='quick_schedule_component'),
+    
+    # Auto schedule (triggered when component reaches critical hours)
+    path('component/<str:model_name>/<int:component_id>/auto-schedule/', 
+         auto_schedule_component_maintenance, 
+         name='auto_schedule_component'),
+    
+    # ==================== BATCH MAINTENANCE ====================
+    path('batch/<str:batch_id>/', 
+         batch_maintenance_view, 
+         name='batch_maintenance_view'),
+    
+    # ==================== AJAX ENDPOINTS ====================
+    path('ajax/components-by-type/', 
+         get_components_by_aircraft_and_type, 
+         name='ajax_get_components_by_type'),
+
+     #======================== Two state workflows ========================
+     path('component/schedule/create/', component_maintenance_create_enhanced, name='component_maintenance_create'),
+     path('component/maintenance/<int:pk>/complete/', complete_component_maintenance, name='complete_component_maintenance'),
+     path('batch/<str:batch_id>/complete/', batch_complete_maintenance, name='batch_complete_maintenance'),
+     path('ajax/search-components/', search_components_ajax, name='ajax_search_components'),
+     
 ]

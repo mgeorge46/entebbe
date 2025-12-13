@@ -173,7 +173,7 @@ class Component(ComponentValidationMixin, models.Model):
     maintenance_status = models.CharField(_('Maintenance Status'), max_length=100, choices=MAINTENANCE_STATUS,
                                           default='Attached')
     component_status = models.CharField(_('Component Status'), max_length=100, choices=COMPONENT_STATUS,
-                                        default='Operational')
+                                        default='Attached')
     date_detached = models.DateTimeField(_('Date Detached'), blank=True, null=True)
     date_re_provisioned = models.DateTimeField(_('Date Re-Provisioned'), blank=True, null=True)
     date_attached = models.DateTimeField(_('Date Attached'), blank=True, null=True)
@@ -254,6 +254,36 @@ class ComponentMaintenance(models.Model):
     end_date = models.DateTimeField(_('End Date'), blank=False, null=False)
     remarks = models.TextField(_('Maintenance Remarks'), blank=False, null=False, max_length=500)
     maintenance_report = models.FileField(_('Maintenance Report'), blank=False, null=False)
+    # two state workflow for maintenance record
+    maintenance_status = models.CharField(
+        _('Maintenance Status'),
+        max_length=20,
+        choices=[
+            ('Scheduled', 'Scheduled'),
+            ('In Progress', 'In Progress'),
+            ('Completed', 'Completed'),
+            ('Cancelled', 'Cancelled'),
+        ],
+        default='Scheduled'
+    )
+    
+    actual_start_date = models.DateTimeField(_('Actual Start Date'), blank=True, null=True)
+    actual_end_date = models.DateTimeField(_('Actual End Date'), blank=True, null=True)
+    actual_hours_added = models.DecimalField(_('Actual Hours Added'), max_digits=10, decimal_places=2, default=0)
+    
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='completed_maintenances',
+        blank=True,
+        null=True
+    )
+    
+    completion_date = models.DateTimeField(_('Completion Date'), blank=True, null=True)
+    completion_remarks = models.TextField(_('Completion Remarks'), blank=True, null=True)
+    completion_report = models.FileField(_('Completion Report'), blank=True, null=True)
+
+
     record_date = models.DateTimeField(default=timezone.now)
     added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     updated_date = models.DateTimeField(_('Updated Date'), blank=True, null=True)

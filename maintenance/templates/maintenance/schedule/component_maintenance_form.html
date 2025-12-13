@@ -1,0 +1,123 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}{% if object %}Edit{% else %}Schedule{% endif %} Component Maintenance{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Components{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Schedule{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>{% if object %}Edit Component Maintenance Schedule{% else %}Schedule New Component Maintenance{% endif %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                    {% for field_errors in form.errors.values %}
+                        {% for error in field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+            {% endif %}
+            
+            <!-- Aircraft Selection (to filter components) -->
+            <div class="form-group">
+                <label>Select Aircraft First</label>
+                <select id="aircraftSelect" class="form-control">
+                    <option value="">-- Select Aircraft --</option>
+                    {% for aircraft in aircrafts %}
+                    <option value="{{ aircraft.id }}">{{ aircraft.abbreviation }} - {{ aircraft.registration_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <hr>
+            
+            {{ form|crispy }}
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="fa fa-check"></i> {% if object %}Update Schedule{% else %}Create Schedule{% endif %}
+                </button>
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-warning">
+                    <i class="fa fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // When aircraft is selected, enable component type selection
+    $('#aircraftSelect').change(function() {
+        const aircraftId = $(this).val();
+        if (aircraftId) {
+            $('#id_component_type').prop('disabled', false);
+            // Clear component_id dropdown
+            $('#id_component_id').html('<option value="">-- Select Component Type First --</option>');
+            $('#id_component_id').prop('disabled', true);
+        } else {
+            $('#id_component_type').prop('disabled', true);
+            $('#id_component_id').prop('disabled', true);
+        }
+    });
+    
+    // When component type is selected, load components via AJAX
+    $('#id_component_type').change(function() {
+        const componentType = $(this).val();
+        const aircraftId = $('#aircraftSelect').val();
+        
+        if (componentType && aircraftId) {
+            $.ajax({
+                url: '{% url "ajax_get_components" %}',
+                data: {
+                    'component_type': componentType,
+                    'aircraft_id': aircraftId
+                },
+                success: function(data) {
+                    let options = '<option value="">-- Select Component --</option>';
+                    data.components.forEach(function(comp) {
+                        options += `<option value="${comp.id}">${comp.name} (${comp.maintenance_hours} hrs)</option>`;
+                    });
+                    $('#id_component_id').html(options);
+                    $('#id_component_id').prop('disabled', false);
+                },
+                error: function() {
+                    alert('Error loading components. Please try again.');
+                }
+            });
+        }
+    });
+    
+    // Initialize - disable dropdowns on load
+    $('#id_component_type').prop('disabled', true);
+    $('#id_component_id').prop('disabled', true);
+    
+    // Validation: ensure end_date is after start_date
+    $('[name="end_date"]').change(function() {
+        const startDate = new Date($('[name="start_date"]').val());
+        const endDate = new Date($(this).val());
+        
+        if (endDate <= startDate) {
+            alert('End date must be after start date');
+            $(this).val('');
+        }
+    });
+});
+</script>
+
+{% endblock content %}

@@ -1,0 +1,163 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Aircraft Maintenance Details{% endblock greetings %}
+{% block text %}{% endblock text %}
+{% block breadlink1 %}{% endblock breadlink1 %}{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Aircraft{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}Details{% endblock breadtext3 %}
+{% block breadlink4 %}{% endblock breadlink4 %}{% block breadtext4 %}{% endblock breadtext4 %}
+
+{% block content %}
+<style>
+    .info-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+        margin-bottom: 15px;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: #6c757d;
+    }
+    
+    .schedule-type-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    
+    .manual-badge {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .automated-badge {
+        background-color: #17a2b8;
+        color: #fff;
+    }
+</style>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">
+            <i class="fa fa-wrench"></i> 
+            Maintenance Schedule for {{ maintenance.aircraft_to_maintain.abbreviation }}
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <span class="info-label">Aircraft:</span><br>
+                    <a href="{% url 'aircraft_detail' maintenance.aircraft_to_maintain.registration_number %}">
+                        {{ maintenance.aircraft_to_maintain.abbreviation }} - {{ maintenance.aircraft_to_maintain.registration_number }}
+                    </a>
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">Maintenance Type:</span><br>
+                    {{ maintenance.get_maintenance_type_display }}
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">Schedule Type:</span><br>
+                    <span class="schedule-type-badge {% if maintenance.main_type_schedule == 'Operational' %}manual-badge{% else %}automated-badge{% endif %}">
+                        {% if maintenance.main_type_schedule == 'Operational' %}
+                            📋 Manual Schedule
+                        {% else %}
+                            🤖 Automated Schedule
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">Maintenance Hours:</span><br>
+                    <strong>{{ maintenance.maintenance_hours }}</strong> hours
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">Hours Added:</span><br>
+                    <strong>{{ maintenance.maintenance_hours_added }}</strong> hours
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="info-card">
+                    <span class="info-label">Start Date:</span><br>
+                    {{ maintenance.start_date|date:"l, F j, Y - H:i" }}
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">End Date:</span><br>
+                    {{ maintenance.end_date|date:"l, F j, Y - H:i" }}
+                </div>
+                
+                {% if maintenance.next_maintenance_date %}
+                <div class="info-card">
+                    <span class="info-label">Next Recommended Maintenance:</span><br>
+                    {{ maintenance.next_maintenance_date|date:"l, F j, Y - H:i" }}
+                </div>
+                {% endif %}
+                
+                <div class="info-card">
+                    <span class="info-label">Duration:</span><br>
+                    {% widthratio maintenance.end_date|timeuntil:maintenance.start_date 1 1 %} 
+                </div>
+                
+                <div class="info-card">
+                    <span class="info-label">Created By:</span><br>
+                    {{ maintenance.added_by.get_full_name|default:maintenance.added_by.username }}<br>
+                    <small class="text-muted">{{ maintenance.record_date|date:"Y-m-d H:i" }}</small>
+                </div>
+                
+                {% if maintenance.updated_by %}
+                <div class="info-card">
+                    <span class="info-label">Last Updated By:</span><br>
+                    {{ maintenance.updated_by }}<br>
+                    <small class="text-muted">{{ maintenance.updated_date|date:"Y-m-d H:i" }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="info-card">
+            <span class="info-label">Remarks:</span><br>
+            <p>{{ maintenance.remarks|linebreaks }}</p>
+        </div>
+        
+        {% if maintenance.update_comments %}
+        <div class="info-card">
+            <span class="info-label">Update Comments:</span><br>
+            <p>{{ maintenance.update_comments|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        {% if maintenance.maintenance_report %}
+        <div class="info-card">
+            <span class="info-label">Maintenance Report:</span><br>
+            <a href="{{ maintenance.maintenance_report.url }}" class="btn btn-sm btn-info" download>
+                <i class="fa fa-download"></i> Download Report
+            </a>
+        </div>
+        {% endif %}
+        
+        <hr>
+        
+        <div class="btn-group" role="group">
+            <a href="{% url 'aircraft_maintenance_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+            <a href="{% url 'aircraft_maintenance_update' maintenance.pk %}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit Schedule
+            </a>
+            <a href="{% url 'aircraft_detail' maintenance.aircraft_to_maintain.registration_number %}" class="btn btn-info">
+                <i class="fa fa-plane"></i> View Aircraft
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
