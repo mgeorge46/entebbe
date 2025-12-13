@@ -1,0 +1,583 @@
+{% extends "includes/base.html" %}
+{% block greetings %}Operations Whiteboard{% endblock greetings %}
+{% block text %}Real-time Flight & Maintenance Dashboard{% endblock text %}
+{% block breadlink1 %}/{% endblock breadlink1 %}{% block breadtext1 %}Operations{% endblock breadtext1 %}
+{% block breadlink2 %}{% endblock breadlink2 %}{% block breadtext2 %}Whiteboard{% endblock breadtext2 %}
+{% block breadlink3 %}{% endblock breadlink3 %}{% block breadtext3 %}{% endblock breadtext3 %}
+
+{% block stylesheets %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<style>
+    body {
+        background-color: #f5f7fa;
+    }
+    
+    .whiteboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        margin: -20px -20px 20px -20px;
+        border-radius: 8px;
+    }
+    
+    .control-panel {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .legend-item:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+    }
+    
+    .legend-item.active {
+        background: #e7f3ff;
+        border: 2px solid #007bff;
+    }
+    
+    .color-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    .legend-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    #calendar {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        min-height: 600px;
+    }
+    
+    /* FullCalendar customizations */
+    .fc-toolbar-title {
+        font-size: 24px !important;
+        font-weight: 700 !important;
+        color: #667eea;
+    }
+    
+    .fc-button {
+        background: #667eea !important;
+        border-color: #667eea !important;
+        text-transform: capitalize;
+    }
+    
+    .fc-button:hover {
+        background: #5568d3 !important;
+        border-color: #5568d3 !important;
+    }
+    
+    .fc-button-active {
+        background: #764ba2 !important;
+        border-color: #764ba2 !important;
+    }
+    
+    .fc-event {
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    /* Modal customizations */
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .detail-grid {
+        display: grid;
+        gap: 12px;
+    }
+    
+    .detail-item {
+        display: flex;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 140px;
+    }
+    
+    .detail-value {
+        color: #212529;
+        flex: 1;
+    }
+    
+    .crew-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        margin: 2px;
+        background: #e7f3ff;
+        border-radius: 12px;
+        font-size: 13px;
+        color: #0056b3;
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .fab-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s;
+    }
+    
+    .fab-button:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.8);
+    }
+    
+    @media (max-width: 768px) {
+        .legend-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .control-panel {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="whiteboard-header">
+    <h2><i class="fa fa-calendar-check-o"></i> Flight Operations Whiteboard</h2>
+    <p class="mb-0">Consolidated view of flights, crew schedules, and maintenance</p>
+</div>
+
+<!-- Control Panel -->
+<div class="control-panel">
+    <div class="row">
+        <div class="col-md-12">
+            <h6 class="mb-3"><i class="fa fa-filter"></i> Display Filters</h6>
+            
+            <!-- Legend with checkboxes -->
+            <div class="legend-grid">
+                <div class="legend-item active" data-filter="flights" id="filter-flights">
+                    <div class="color-box" style="background: #007bff;"></div>
+                    <input type="checkbox" class="mr-2" id="showFlights" checked hidden>
+                    <span class="legend-label">✈️ Flights</span>
+                </div>
+                
+                <div class="legend-item active" data-filter="crew" id="filter-crew">
+                    <div class="color-box" style="background: #28a745;"></div>
+                    <input type="checkbox" class="mr-2" id="showCrew" checked hidden>
+                    <span class="legend-label">👥 Crew Schedules</span>
+                </div>
+                
+                <div class="legend-item active" data-filter="maintenance-due" id="filter-maintenance-due">
+                    <div class="color-box" style="background: #dc3545;"></div>
+                    <input type="checkbox" class="mr-2" id="showMaintenanceDue" checked hidden>
+                    <span class="legend-label">🔴 Maintenance Due</span>
+                </div>
+                
+                <div class="legend-item active" data-filter="maintenance-rec" id="filter-maintenance-rec">
+                    <div class="color-box" style="background: #fd7e14;"></div>
+                    <input type="checkbox" class="mr-2" id="showMaintenanceRecommended" checked hidden>
+                    <span class="legend-label">🟠 Recommended</span>
+                </div>
+                
+                <div class="legend-item active" data-filter="maintenance-sched" id="filter-maintenance-sched">
+                    <div class="color-box" style="background: #6f42c1;"></div>
+                    <input type="checkbox" class="mr-2" id="showMaintenanceScheduled" checked hidden>
+                    <span class="legend-label">🟣 Scheduled Maint.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Filters Row -->
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <label class="small text-muted">Aircraft Filter</label>
+            <select class="form-control form-control-sm" id="aircraftFilter">
+                <option value="">All Aircraft</option>
+                {% for aircraft in aircrafts %}
+                <option value="{{ aircraft.id }}">{{ aircraft.abbreviation }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-md-4">
+            <label class="small text-muted">Status Filter</label>
+            <select class="form-control form-control-sm" id="statusFilter">
+                <option value="">All Statuses</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="OnTrip">On Trip</option>
+                <option value="Completed">Completed</option>
+            </select>
+        </div>
+        
+        <div class="col-md-4">
+            <label class="small text-muted">Quick Actions</label>
+            <div class="btn-group btn-group-sm w-100">
+                <button class="btn btn-outline-primary" onclick="calendar.changeView('dayGridMonth')">
+                    <i class="fa fa-calendar"></i> Month
+                </button>
+                <button class="btn btn-outline-primary active" onclick="calendar.changeView('timeGridWeek')">
+                    <i class="fa fa-calendar-week"></i> Week
+                </button>
+                <button class="btn btn-outline-primary" onclick="calendar.changeView('timeGridDay')">
+                    <i class="fa fa-calendar-day"></i> Day
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar -->
+<div id="calendar"></div>
+
+<!-- Event Detail Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventTitle">Event Details</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="eventContent" class="detail-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <div id="eventActions"></div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAB Button -->
+<button class="fab-button" onclick="window.location.href='{% url 'flight_create' %}'">
+    <i class="fa fa-plus"></i>
+</button>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+<script>
+let calendar;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    
+    // Initialize calendar
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        slotMinTime: '00:00:00',
+        slotMaxTime: '24:00:00',
+        height: 'auto',
+        navLinks: true,
+        editable: false,
+        selectable: true,
+        nowIndicator: true,
+        businessHours: true,
+        
+        // Fetch events
+        events: function(info, successCallback, failureCallback) {
+            const params = new URLSearchParams({
+                start: info.startStr,
+                end: info.endStr,
+                show_flights: $('#showFlights').is(':checked'),
+                show_crew: $('#showCrew').is(':checked'),
+                show_maintenance_due: $('#showMaintenanceDue').is(':checked'),
+                show_maintenance_recommended: $('#showMaintenanceRecommended').is(':checked'),
+                show_maintenance_scheduled: $('#showMaintenanceScheduled').is(':checked'),
+                aircraft: $('#aircraftFilter').val() || '',
+                status: $('#statusFilter').val() || '',
+            });
+            
+            fetch(`/operations/whiteboard/data/?${params}`)
+                .then(response => response.json())
+                .then(data => successCallback(data))
+                .catch(error => {
+                    console.error('Error:', error);
+                    failureCallback(error);
+                });
+        },
+        
+        // Event click
+        eventClick: function(info) {
+            showEventDetails(info.event);
+        },
+        
+        // Date click
+        dateClick: function(info) {
+            if (confirm(`Schedule a flight for ${info.dateStr}?`)) {
+                window.location.href = `/dispatch/add/?date=${info.dateStr}`;
+            }
+        }
+    });
+    
+    calendar.render();
+    
+    // Legend filter toggles
+    $('.legend-item').on('click', function() {
+        $(this).toggleClass('active');
+        const checkbox = $(this).find('input[type="checkbox"]');
+        checkbox.prop('checked', $(this).hasClass('active'));
+        calendar.refetchEvents();
+    });
+    
+    // Dropdown filters
+    $('#aircraftFilter, #statusFilter').on('change', function() {
+        calendar.refetchEvents();
+    });
+});
+
+// Show event details
+function showEventDetails(event) {
+    const props = event.extendedProps;
+    let content = '';
+    let actions = '';
+    let title = event.title;
+    
+    if (props.type === 'flight' || props.type === 'flight_return') {
+        title = `✈️ Flight ${props.flight_number}`;
+        content = `
+            <div class="detail-item">
+                <span class="detail-label">Flight Number:</span>
+                <span class="detail-value"><strong>${props.flight_number}</strong></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Route:</span>
+                <span class="detail-value">${props.origin} → ${props.destination}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Aircraft:</span>
+                <span class="detail-value">${props.aircraft}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value"><span class="status-badge bg-primary">${props.status}</span></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Departure:</span>
+                <span class="detail-value">${event.start.toLocaleString()}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Arrival:</span>
+                <span class="detail-value">${event.end.toLocaleString()}</span>
+            </div>
+        `;
+        
+        if (props.cabin_crew) {
+            content += `
+                <div class="detail-item">
+                    <span class="detail-label">Cabin Crew:</span>
+                    <span class="detail-value">${props.cabin_crew || 'Not assigned'}</span>
+                </div>
+            `;
+        }
+        
+        if (props.flight_crew) {
+            content += `
+                <div class="detail-item">
+                    <span class="detail-label">Flight Crew:</span>
+                    <span class="detail-value">${props.flight_crew || 'Not assigned'}</span>
+                </div>
+            `;
+        }
+        
+        actions = `
+            <a href="/dispatch/schedule/update/${props.flight_id}" class="btn btn-warning" target="_blank">
+                <i class="fa fa-edit"></i> Edit
+            </a>
+            <a href="/dispatch/schedule/details/${props.flight_number}/" class="btn btn-info" target="_blank">
+                <i class="fa fa-info-circle"></i> Details
+            </a>
+        `;
+    } 
+    else if (props.type === 'crew_schedule') {
+        title = `👤 ${props.crew_name}`;
+        content = `
+            <div class="detail-item">
+                <span class="detail-label">Crew Member:</span>
+                <span class="detail-value"><strong>${props.crew_name}</strong></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Role:</span>
+                <span class="detail-value">${props.crew_type}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Flight:</span>
+                <span class="detail-value">${props.flight_number}</span>
+            </div>
+        `;
+        
+        actions = `
+            <a href="/accounts/details/${props.crew_id}/" class="btn btn-info" target="_blank">
+                <i class="fa fa-user"></i> View Profile
+            </a>
+        `;
+    }
+    else if (props.type === 'maintenance_due' || props.type === 'maintenance_recommended') {
+        title = `🔧 ${props.component_name}`;
+        const isDue = props.type === 'maintenance_due';
+        
+        content = `
+            <div class="detail-item">
+                <span class="detail-label">Component:</span>
+                <span class="detail-value"><strong>${props.component_name}</strong></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Aircraft:</span>
+                <span class="detail-value">${props.aircraft}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Serial Number:</span>
+                <span class="detail-value">${props.serial_number}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Maintenance Hours:</span>
+                <span class="detail-value"><strong>${props.maintenance_hours}</strong> hours</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">${isDue ? 'Due Date' : 'Recommended Date'}:</span>
+                <span class="detail-value"><strong class="${isDue ? 'text-danger' : 'text-warning'}">${isDue ? props.due_date : props.recommended_date}</strong></span>
+            </div>
+        `;
+        
+        actions = `
+            <button class="btn btn-warning" onclick="scheduleMaintenance('${props.component_type}', ${props.component_id})">
+                <i class="fa fa-wrench"></i> Schedule Maintenance
+            </button>
+        `;
+    }
+    else if (props.type === 'maintenance_scheduled') {
+        title = `🛠️ ${props.maintenance_type}`;
+        content = `
+            <div class="detail-item">
+                <span class="detail-label">Component:</span>
+                <span class="detail-value"><strong>${props.component_name}</strong></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Aircraft:</span>
+                <span class="detail-value">${props.aircraft}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value"><span class="status-badge" style="background: #6f42c1; color: white;">${props.maintenance_type}</span></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">${props.status}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Remarks:</span>
+                <span class="detail-value">${props.remarks || 'N/A'}</span>
+            </div>
+        `;
+    }
+    
+    $('#eventTitle').html(title);
+    $('#eventContent').html(content);
+    $('#eventActions').html(actions);
+    $('#eventModal').modal('show');
+}
+
+// Schedule maintenance function
+function scheduleMaintenance(componentType, componentId) {
+    const startDate = prompt('Start Date (YYYY-MM-DD HH:MM):');
+    const endDate = prompt('End Date (YYYY-MM-DD HH:MM):');
+    const maintenanceType = prompt('Maintenance Type (Class_A/Class_B/Class_C/Class_D):');
+    const remarks = prompt('Remarks (optional):') || '';
+    
+    if (startDate && endDate && maintenanceType) {
+        fetch('/operations/whiteboard/schedule-maintenance/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: new URLSearchParams({
+                component_type: componentType,
+                component_id: componentId,
+                start_date: startDate,
+                end_date: endDate,
+                maintenance_type: maintenanceType,
+                remarks: remarks
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Maintenance scheduled successfully!');
+                $('#eventModal').modal('hide');
+                calendar.refetchEvents();
+            } else {
+                alert('❌ Error: ' + (data.error || 'Failed to schedule'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Failed to schedule maintenance');
+        });
+    }
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+    calendar.refetchEvents();
+}, 300000);
+</script>
+{% endblock javascripts %}

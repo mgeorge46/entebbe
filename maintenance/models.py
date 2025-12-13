@@ -238,11 +238,6 @@ class AircraftSub3Component(Component):
 
 
 class ComponentMaintenance(models.Model):
-    """
-    Tracks maintenance for all component types using GenericForeignKey.
-    Can be used for AircraftMainComponent, AircraftSubComponent, 
-    AircraftSub2Component, and AircraftSub3Component.
-    """
     main_type_schedule = models.CharField(_('Maintenance Type'), max_length=100, choices=MAINTENANCE_STATUS)
     
     # Generic relation to any component type
