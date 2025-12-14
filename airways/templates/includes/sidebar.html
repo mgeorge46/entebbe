@@ -7,8 +7,8 @@
                     class="icon icon-layout-25"></i><span class="nav-text">Dashboard</span></a>
                 <ul aria-expanded="false">
                     <li><a href="{% url 'ops_dash' %}">Operations</a></li>
-                    <li><a href="#">Maintenance</a></li>
-                    <li><a href="#">Crew</a></li>
+                    <li><a href="{% url 'maintenance_dashboard' %}">Maintenance</a></li>
+                    <li><a href="{% url 'manage_crew_scheduling' %}">Crew</a></li>
                 </ul>
             </li>
 
@@ -60,7 +60,7 @@
                             <li><a href="{% url 'component_maintenance_list' %}">Component Schedules </a></li>
                         </ul>
                     </li>
-                    <li><a href="{%url 'airport_list' %}" aria-expanded="false">Airport</a>
+                    <li><a href="{%url 'airport_list' %}" aria-expanded="false">Airports</a>
                     </li>
                     <li><a class="has-arrow" href="javascript:void()" aria-expanded="false">Techlogs</a>
                         <ul aria-expanded="false">
