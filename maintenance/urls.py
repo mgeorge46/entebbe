@@ -42,6 +42,7 @@ from .views import (
     auto_schedule_component_maintenance,
     maintenance_dashboard,
     # Two state workflows 
+    ComponentMaintenanceCreateView,
     complete_component_maintenance,
     batch_complete_maintenance,
     search_components_ajax,
@@ -124,58 +125,29 @@ urlpatterns = [
     path('dashboard/', maintenance_dashboard, name='maintenance_dashboard'),
     
     # ==================== AIRCRAFT MAINTENANCE SCHEDULING ====================
-    path('aircraft/schedule/list/', 
-         AircraftMaintenanceListView.as_view(), 
-         name='aircraft_maintenance_list'),
+    path('aircraft/schedule/list/', AircraftMaintenanceListView.as_view(), name='aircraft_maintenance_list'),
     
-    path('aircraft/schedule/add/', 
-         AircraftMaintenanceCreateView.as_view(), 
-         name='aircraft_maintenance_add'),
+    path('aircraft/schedule/add/', AircraftMaintenanceCreateView.as_view(), name='aircraft_maintenance_add'),
     
-    path('aircraft/schedule/update/<int:pk>/', 
-         AircraftMaintenanceUpdateView.as_view(), 
-         name='aircraft_maintenance_update'),
+    path('aircraft/schedule/update/<int:pk>/',  AircraftMaintenanceUpdateView.as_view(), name='aircraft_maintenance_update'),
     
-    path('aircraft/schedule/detail/<int:pk>/', 
-         AircraftMaintenanceDetailView.as_view(), 
-         name='aircraft_maintenance_detail'),
+    path('aircraft/schedule/detail/<int:pk>/', AircraftMaintenanceDetailView.as_view(), name='aircraft_maintenance_detail'),
     
     # ==================== COMPONENT MAINTENANCE SCHEDULING ====================
-    path('component/schedule/list/', 
-         ComponentMaintenanceListView.as_view(), 
-         name='component_maintenance_list'),
-    
-    path('component/schedule/create/', 
-         component_maintenance_create, 
-         name='component_maintenance_create'),
-    
-    path('component/schedule/update/<int:pk>/', 
-         ComponentMaintenanceUpdateView.as_view(), 
-         name='component_maintenance_update'),
-    
-    path('component/schedule/detail/<int:pk>/', 
-         ComponentMaintenanceDetailView.as_view(), 
-         name='component_maintenance_detail'),
-    
+    path('component/schedule/list/', ComponentMaintenanceListView.as_view(), name='component_maintenance_list'),
+    path('component/schedule/create/', ComponentMaintenanceCreateView.as_view(), name='component_maintenance_create'),
+    path('component/schedule/update/<int:pk>/', ComponentMaintenanceUpdateView.as_view(), name='component_maintenance_update'),
+    path('component/schedule/detail/<int:pk>/', ComponentMaintenanceDetailView.as_view(), name='component_maintenance_detail'),
     # Quick schedule from component detail page
-    path('component/<str:model_name>/<int:component_id>/quick-schedule/', 
-         quick_schedule_component_maintenance, 
+    path('component/<str:model_name>/<int:component_id>/quick-schedule/', quick_schedule_component_maintenance, 
          name='quick_schedule_component'),
     
     # Auto schedule (triggered when component reaches critical hours)
-    path('component/<str:model_name>/<int:component_id>/auto-schedule/', 
-         auto_schedule_component_maintenance, 
-         name='auto_schedule_component'),
-    
+    path('component/<str:model_name>/<int:component_id>/auto-schedule/', auto_schedule_component_maintenance, name='auto_schedule_component'),
     # ==================== BATCH MAINTENANCE ====================
-    path('batch/<str:batch_id>/', 
-         batch_maintenance_view, 
-         name='batch_maintenance_view'),
-    
+    path('batch/<str:batch_id>/', batch_maintenance_view, name='batch_maintenance_view'),
     # ==================== AJAX ENDPOINTS ====================
-    path('ajax/components-by-type/', 
-         get_components_by_aircraft_and_type, 
-         name='ajax_get_components_by_type'),
+    path('ajax/components-by-type/', get_components_by_aircraft_and_type, name='ajax_get_components_by_type'),
 
      #======================== Two state workflows ========================
      path('component/schedule/create/', component_maintenance_create_enhanced, name='component_maintenance_create'),
