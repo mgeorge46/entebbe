@@ -6,4 +6,5 @@ __pycache__/
 ```
 # Static files
 /static/
+/media/
 ```

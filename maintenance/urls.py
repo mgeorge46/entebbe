@@ -46,6 +46,8 @@ from .views import (
     batch_complete_maintenance,
     search_components_ajax,
     component_maintenance_create_enhanced,
+    confirm_component_maintenance,
+    bulk_confirm_maintenances,
 )
 
 
@@ -180,5 +182,8 @@ urlpatterns = [
      path('component/maintenance/<int:pk>/complete/', complete_component_maintenance, name='complete_component_maintenance'),
      path('batch/<str:batch_id>/complete/', batch_complete_maintenance, name='batch_complete_maintenance'),
      path('ajax/search-components/', search_components_ajax, name='ajax_search_components'),
-     
+     # Confirmation actions
+     path('component/maintenance/<int:pk>/confirm/', confirm_component_maintenance, name='confirm_component_maintenance'),
+     path('component/maintenance/bulk-confirm/', bulk_confirm_maintenances, name='bulk_confirm_maintenances'),
+  
 ]

@@ -12,10 +12,10 @@
     <div class="card">
         <div class="stat-widget-one card-body">
             <div class="stat-icon d-inline-block">
-                <i class="ti-plane text-primary border-primary"></i>
+                <i class="fa fa-plane text-secondary border-primary"></i>
             </div>
             <div class="stat-content d-inline-block">
-                <div class="stat-text">Aircraft Schedules</div>
+                <div class="stat-text">Aircraft</div>
                 <div class="stat-digit">{{ total_aircraft_schedules }}</div>
             </div>
         </div>
@@ -29,7 +29,7 @@
                 <i class="ti-settings text-success border-success"></i>
             </div>
             <div class="stat-content d-inline-block">
-                <div class="stat-text">Component Schedules</div>
+                <div class="stat-text">Component</div>
                 <div class="stat-digit">{{ total_component_schedules }}</div>
             </div>
         </div>
@@ -43,13 +43,12 @@
                 <i class="ti-hand-stop text-warning border-warning"></i>
             </div>
             <div class="stat-content d-inline-block">
-                <div class="stat-text">Manual Schedules</div>
+                <div class="stat-text">Manual</div>
                 <div class="stat-digit">{{ manual_aircraft|add:manual_component }}</div>
             </div>
         </div>
     </div>
 </div>
-
 <div class="col-lg-3 col-sm-6">
     <div class="card">
         <div class="stat-widget-one card-body">
@@ -57,12 +56,13 @@
                 <i class="ti-reload text-info border-info"></i>
             </div>
             <div class="stat-content d-inline-block">
-                <div class="stat-text">Automated Schedules</div>
+                <div class="stat-text">Manual</div>
                 <div class="stat-digit">{{ automated_aircraft|add:automated_component }}</div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock dashcontent %}
 
 {% block content %}

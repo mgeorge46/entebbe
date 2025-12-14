@@ -1,0 +1,299 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+{% block greetings %}
+{% if form.instance.pk %}
+Update Component Maintenance Schedule
+{% else %}
+Schedule Component Maintenance
+{% endif %}
+{% endblock greetings %}
+
+{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadtext2 %}Component{% endblock breadtext2 %}
+{% block breadtext3 %}Schedule{% endblock breadtext3 %}
+
+{% block content %}
+<style>
+    .component-results {
+        position: absolute;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #ddd;
+        max-height: 300px;
+        overflow-y: auto;
+        width: 100%;
+        display: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .component-result-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .component-result-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .component-result-item .component-name {
+        font-weight: bold;
+        color: #3B7CFF;
+    }
+    
+    .component-result-item .component-details {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    
+    .selected-component-info {
+        background-color: #e7f3ff;
+        border: 1px solid #3B7CFF;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 10px;
+        display: none;
+    }
+    
+    .selected-component-info h6 {
+        color: #3B7CFF;
+        margin-bottom: 10px;
+    }
+    
+    #component-search-container {
+        position: relative;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="maintenanceForm">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <strong>Please correct the following errors:</strong>
+                        <ul>
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ field }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Component Selection Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Component Selection</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_aircraft">Aircraft *</label>
+                                        {{ form.aircraft }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_component_level">Component Level *</label>
+                                        {{ form.component_level }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group" id="component-search-container">
+                                        <label for="id_component_search">Search Component *</label>
+                                        {{ form.component_search }}
+                                        <small class="form-text text-muted">
+                                            Type component name or serial number to search
+                                        </small>
+                                        <div class="component-results" id="componentResults"></div>
+                                    </div>
+                                    
+                                    <!-- Selected component info -->
+                                    <div class="selected-component-info" id="selectedComponentInfo">
+                                        <h6>Selected Component:</h6>
+                                        <div id="selectedComponentDetails"></div>
+                                    </div>
+                                    
+                                    <!-- Hidden fields -->
+                                    {{ form.content_type_id }}
+                                    {{ form.object_id }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Maintenance Details Section -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Maintenance Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.main_type_schedule|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.maintenance_type|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.maintenance_hours|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.maintenance_hours_added|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.start_date|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.end_date|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {{ form.remarks|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {{ form.maintenance_report|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-check"></i> 
+                            {% if form.instance.pk %}Update{% else %}Schedule{% endif %} Maintenance
+                        </button>
+                        <a href="{% url 'component_maintenance_list' %}" class="btn btn-warning">
+                            <i class="fa fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    let searchTimeout;
+    
+    // Component search functionality
+    $('#id_component_search').on('input', function() {
+        clearTimeout(searchTimeout);
+        const searchTerm = $(this).val();
+        const aircraftId = $('#id_aircraft').val();
+        const componentLevel = $('#id_component_level').val();
+        
+        if (!aircraftId || !componentLevel) {
+            alert('Please select an aircraft and component level first');
+            return;
+        }
+        
+        if (searchTerm.length < 2) {
+            $('#componentResults').hide();
+            return;
+        }
+        
+        searchTimeout = setTimeout(function() {
+            $.ajax({
+                url: '{% url "ajax_search_components" %}',
+                data: {
+                    'aircraft_id': aircraftId,
+                    'component_level': componentLevel,
+                    'search_term': searchTerm
+                },
+                success: function(data) {
+                    displayComponentResults(data.results);
+                }
+            });
+        }, 300);
+    });
+    
+    function displayComponentResults(results) {
+        const resultsDiv = $('#componentResults');
+        resultsDiv.empty();
+        
+        if (results.length === 0) {
+            resultsDiv.html('<div class="component-result-item">No components found</div>');
+        } else {
+            results.forEach(function(result) {
+                const item = $('<div class="component-result-item"></div>')
+                    .html(`
+                        <div class="component-name">${result.component_name}</div>
+                        <div class="component-details">
+                            Serial: ${result.serial_number} | 
+                            Maintenance Hours: ${result.maintenance_hours}
+                        </div>
+                    `)
+                    .data('result', result)
+                    .click(function() {
+                        selectComponent($(this).data('result'));
+                    });
+                resultsDiv.append(item);
+            });
+        }
+        
+        resultsDiv.show();
+    }
+    
+    function selectComponent(result) {
+        // Set hidden fields
+        $('#id_content_type_id').val(result.content_type_id);
+        $('#id_object_id').val(result.id);
+        
+        // Update search field
+        $('#id_component_search').val(`${result.component_name} - ${result.serial_number}`);
+        
+        // Show selected component info
+        $('#selectedComponentDetails').html(`
+            <p><strong>Component:</strong> ${result.component_name}</p>
+            <p><strong>Serial Number:</strong> ${result.serial_number}</p>
+            <p><strong>Current Maintenance Hours:</strong> ${result.maintenance_hours}</p>
+        `);
+        $('#selectedComponentInfo').show();
+        
+        // Hide results
+        $('#componentResults').hide();
+    }
+    
+    // Hide results when clicking outside
+    $(document).click(function(e) {
+        if (!$(e.target).closest('#component-search-container').length) {
+            $('#componentResults').hide();
+        }
+    });
+    
+    // Validate aircraft and level selection before allowing component search
+    $('#id_aircraft, #id_component_level').change(function() {
+        $('#id_component_search').val('');
+        $('#id_content_type_id').val('');
+        $('#id_object_id').val('');
+        $('#selectedComponentInfo').hide();
+        $('#componentResults').hide();
+    });
+});
+</script>
+{% endblock content %}

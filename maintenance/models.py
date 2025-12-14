@@ -299,6 +299,33 @@ class ComponentMaintenance(models.Model):
             models.Index(fields=['start_date']),
         ]
 
+    def confirm_maintenance(self, confirmed_by):
+        """
+        Confirm maintenance completion and update component hours.
+        """
+        component = self.component_to_maintain
+        
+        # Update component hours
+        component.maintenance_hours += self.maintenance_hours_added
+        component.updated_by = confirmed_by.username
+        component.updated_date = timezone.now()
+        
+        # Return component to operational if it was in maintenance
+        if component.component_status == 'Maintenance':
+            component.component_status = 'Attached'
+        if component.maintenance_status == 'Maintenance':
+            component.maintenance_status = 'Operational'
+        
+        component.save()
+        
+        # Mark this maintenance as completed
+        self.main_type_schedule = 'Operational'
+        self.updated_by = confirmed_by.username
+        self.updated_date = timezone.now()
+        self.save()
+        
+        return component
+
     def __str__(self):
         return f'{self.component_to_maintain} - {self.maintenance_type} ({self.start_date.date()})'
 

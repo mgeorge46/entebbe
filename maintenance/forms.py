@@ -9,6 +9,152 @@ from django.contrib.contenttypes.models import ContentType
 from maintenance.models import (AircraftMaintenance, ComponentMaintenance)
 
 
+class ComponentMaintenanceForm(forms.ModelForm):
+    """
+    Form for scheduling component maintenance with AJAX-powered search.
+    Works with all component types through ContentTypes framework.
+    """
+    
+    aircraft = forms.ModelChoiceField(
+        queryset=Aircraft.objects.all(),
+        required=True,
+        label="Aircraft",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_aircraft'})
+    )
+    
+    component_level = forms.ChoiceField(
+        choices=[
+            ('', '--- Select Component Level ---'),
+            ('aircraftmaincomponent', 'Main Component (Level 0)'),
+            ('aircraftsubcomponent', 'Sub Component (Level 1)'),
+            ('aircraftsub2component', 'Sub2 Component (Level 2)'),
+            ('aircraftsub3component', 'Sub3 Component (Level 3)'),
+        ],
+        required=True,
+        label="Component Level",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_component_level'})
+    )
+    
+    component_search = forms.CharField(
+        required=False,
+        label="Search Component",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_component_search',
+            'placeholder': 'Type component name or serial number...',
+            'autocomplete': 'off'
+        })
+    )
+    
+    content_type_id = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'id': 'id_content_type_id'}),
+        required=True
+    )
+    
+    object_id = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'id': 'id_object_id'}),
+        required=True
+    )
+
+    class Meta:
+        model = ComponentMaintenance
+        fields = [
+            'main_type_schedule',
+            'maintenance_type',
+            'maintenance_hours',
+            'maintenance_hours_added',
+            'start_date',
+            'end_date',
+            'remarks',
+            'maintenance_report'
+        ]
+        widgets = {
+            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'main_type_schedule': forms.Select(attrs={'class': 'form-control'}),
+            'maintenance_type': forms.Select(attrs={'class': 'form-control'}),
+            'maintenance_hours': forms.NumberInput(attrs={'class': 'form-control'}),
+            'maintenance_hours_added': forms.NumberInput(attrs={'class': 'form-control'}),
+            'maintenance_report': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        if self.instance and self.instance.pk:
+            self.fields['aircraft'].initial = self._get_aircraft_from_instance()
+            self.fields['component_level'].initial = self.instance.content_type.model
+            self.fields['component_search'].initial = str(self.instance.component_to_maintain)
+            self.fields['content_type_id'].initial = self.instance.content_type_id
+            self.fields['object_id'].initial = self.instance.object_id
+
+    def _get_aircraft_from_instance(self):
+        component = self.instance.component_to_maintain
+        if hasattr(component, 'aircraft_attached'):
+            return component.aircraft_attached
+        elif hasattr(component, 'parent_component'):
+            return component.parent_component.aircraft_attached
+        elif hasattr(component, 'parent_sub_component'):
+            return component.parent_sub_component.parent_component.aircraft_attached
+        elif hasattr(component, 'parent_sub2_component'):
+            return component.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached
+        return None
+
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        if not cleaned_data.get('content_type_id'):
+            raise forms.ValidationError("Please select a component to maintain.")
+        
+        if not cleaned_data.get('object_id'):
+            raise forms.ValidationError("Please select a valid component.")
+        
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
+        if start_date and end_date and end_date <= start_date:
+            raise forms.ValidationError("End date must be after start date.")
+        
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.content_type_id = self.cleaned_data['content_type_id']
+        instance.object_id = self.cleaned_data['object_id']
+        
+        if commit:
+            instance.save()
+        
+        return instance
+
+class BulkComponentMaintenanceConfirmForm(forms.Form):
+    """Form for bulk confirmation of multiple maintenances"""
+    
+    maintenance_ids = forms.CharField(widget=forms.HiddenInput(), required=True)
+    
+    confirmation_notes = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Add any notes about this confirmation...'
+        }),
+        required=False,
+        label="Confirmation Notes"
+    )
+    
+    def clean_maintenance_ids(self):
+        ids = self.cleaned_data['maintenance_ids']
+        try:
+            return [int(id.strip()) for id in ids.split(',') if id.strip()]
+        except ValueError:
+            raise forms.ValidationError("Invalid maintenance IDs.")
+
+# ==============================================================================
+# END OF ADDITIONS TO forms.py
+# ==============================================================================
+
+
 class BaseComponentForm(forms.ModelForm):
     multiple_entries = forms.BooleanField(required=False, widget=forms.CheckboxInput(
         attrs={'class': 'multiple-entries-checkbox', 'id': 'multipleEntriesCheckbox'}), label='Add Multiple Components')
@@ -178,66 +324,6 @@ class AircraftMaintenanceForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
-
-# Component Maintenance Schedule Form
-class ComponentMaintenanceForm(forms.ModelForm):
-    # Component selection fields
-    component_type = forms.ChoiceField(
-        choices=[
-            ('', '---------'),
-            ('aircraftmaincomponent', 'Main Component'),
-            ('aircraftsubcomponent', 'Sub Component Level 1'),
-            ('aircraftsub2component', 'Sub Component Level 2'),
-            ('aircraftsub3component', 'Sub Component Level 3'),
-        ],
-        required=True,
-        label='Component Type'
-    )
-    
-    component_id = forms.ModelChoiceField(
-        queryset=None,  # Will be populated dynamically
-        required=True,
-        label='Select Component'
-    )
-    
-    class Meta:
-        model = ComponentMaintenance
-        exclude = ['updated_by', 'updated_date', 'added_by', 'record_date', 'content_type', 'object_id']
-        widgets = {
-            'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        aircraft_id = kwargs.pop('aircraft_id', None)
-        super().__init__(*args, **kwargs)
-        
-        # Add CSS classes
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-        
-        # If aircraft_id is provided, filter components
-        if aircraft_id:
-            self.aircraft_id = aircraft_id
-            # Initial queryset is empty, will be populated via AJAX or on component_type change
-            self.fields['component_id'].queryset = AircraftMainComponent.objects.none()
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        
-        # Get the component type and ID
-        component_type = self.cleaned_data['component_type']
-        component_id = self.cleaned_data['component_id']
-        
-        # Set the content type and object ID
-        content_type = ContentType.objects.get(model=component_type)
-        instance.content_type = content_type
-        instance.object_id = component_id.id
-        
-        if commit:
-            instance.save()
-        
-        return instance
 
 
 # Search and Filter Forms

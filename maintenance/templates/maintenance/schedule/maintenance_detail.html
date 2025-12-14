@@ -1,0 +1,158 @@
+{% extends "includes/base.html" %}
+
+{% block greetings %}Component Maintenance Details{% endblock greetings %}
+{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadtext2 %}Component{% endblock breadtext2 %}
+{% block breadtext3 %}Details{% endblock breadtext3 %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Maintenance Schedule Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Component Details</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td width="40%"><strong>Component Name:</strong></td>
+                                <td>{{ component.component_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Serial Number:</strong></td>
+                                <td>{{ component.serial_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Part Number:</strong></td>
+                                <td>{{ component.part_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Component Level:</strong></td>
+                                <td>{{ component_details.level_description }}</td>
+                            </tr>
+                            {% if aircraft %}
+                            <tr>
+                                <td><strong>Aircraft:</strong></td>
+                                <td>{{ aircraft.abbreviation }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td><strong>Current Hours:</strong></td>
+                                <td>
+                                    <span class="badge badge-info">
+                                        {{ component.maintenance_hours }} hours
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Maintenance Schedule</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td width="40%"><strong>Type:</strong></td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        {{ maintenance.maintenance_type }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>{{ maintenance.main_type_schedule }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Start Date:</strong></td>
+                                <td>{{ maintenance.start_date|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>End Date:</strong></td>
+                                <td>{{ maintenance.end_date|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Maintenance Hours:</strong></td>
+                                <td>{{ maintenance.maintenance_hours }} hours</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hours to Add:</strong></td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        +{{ maintenance.maintenance_hours_added }} hours
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-primary">Remarks</h6>
+                        <div class="alert alert-light">
+                            {{ maintenance.remarks|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if maintenance.maintenance_report %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-primary">Maintenance Report</h6>
+                        <a href="{{ maintenance.maintenance_report.url }}" 
+                           class="btn btn-outline-info btn-sm" 
+                           target="_blank">
+                            <i class="fa fa-download"></i> Download Report
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Record Information</h6>
+                        <p class="small">
+                            <strong>Scheduled by:</strong> {{ maintenance.added_by }}<br>
+                            <strong>Date recorded:</strong> {{ maintenance.record_date|date:"Y-m-d H:i" }}
+                        </p>
+                        {% if maintenance.updated_by %}
+                        <p class="small">
+                            <strong>Last updated by:</strong> {{ maintenance.updated_by }}<br>
+                            <strong>Update date:</strong> {{ maintenance.updated_date|date:"Y-m-d H:i" }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left"></i> Back to List
+                </a>
+                
+                {% if maintenance.start_date >= now and maintenance.main_type_schedule == 'Maintenance' %}
+                <a href="{% url 'component_maintenance_update' maintenance.pk %}" 
+                   class="btn btn-primary">
+                    <i class="fa fa-pencil"></i> Edit Schedule
+                </a>
+                <a href="{% url 'confirm_component_maintenance' maintenance.pk %}" 
+                   class="btn btn-success">
+                    <i class="fa fa-check"></i> Confirm Completion
+                </a>
+                {% endif %}
+                
+                <a href="#" class="btn btn-info">
+                    <i class="fa fa-print"></i> Print
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,152 @@
+{% extends "includes/base.html" %}
+
+{% block greetings %}Confirm Component Maintenance{% endblock greetings %}
+{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadtext2 %}Component{% endblock breadtext2 %}
+{% block breadtext3 %}Confirm{% endblock breadtext3 %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0 text-white">
+                    <i class="fa fa-exclamation-triangle"></i> 
+                    Confirm Maintenance Completion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Important:</strong> Confirming this maintenance will update the component's maintenance hours.
+                </div>
+                
+                <!-- Component Details -->
+                <h6 class="text-primary">Component Information</h6>
+                <table class="table table-bordered">
+                    <tr>
+                        <td width="30%"><strong>Component Name:</strong></td>
+                        <td>{{ component.component_name }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Serial Number:</strong></td>
+                        <td>{{ component.serial_number }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Part Number:</strong></td>
+                        <td>{{ component.part_number }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Maintenance Hours:</strong></td>
+                        <td>
+                            <span class="badge badge-info">{{ component.maintenance_hours }} hours</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>After Confirmation:</strong></td>
+                        <td>
+                            <span class="badge badge-success">
+                                {{ component.maintenance_hours|add:maintenance.maintenance_hours_added }} hours
+                            </span>
+                            <small class="text-success">
+                                (+{{ maintenance.maintenance_hours_added }} hours)
+                            </small>
+                        </td>
+                    </tr>
+                </table>
+                
+                <hr>
+                
+                <!-- Maintenance Details -->
+                <h6 class="text-primary">Maintenance Details</h6>
+                <table class="table table-bordered">
+                    <tr>
+                        <td width="30%"><strong>Maintenance Type:</strong></td>
+                        <td>{{ maintenance.maintenance_type }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Schedule Status:</strong></td>
+                        <td>{{ maintenance.main_type_schedule }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Start Date:</strong></td>
+                        <td>{{ maintenance.start_date|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>End Date:</strong></td>
+                        <td>{{ maintenance.end_date|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remarks:</strong></td>
+                        <td>{{ maintenance.remarks|linebreaks }}</td>
+                    </tr>
+                </table>
+                
+                <!-- Confirmation Form -->
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="confirmation_notes">
+                            <strong>Confirmation Notes (Optional):</strong>
+                        </label>
+                        <textarea 
+                            name="confirmation_notes" 
+                            id="confirmation_notes" 
+                            class="form-control" 
+                            rows="3"
+                            placeholder="Add any notes about the maintenance completion..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <input type="checkbox" id="confirmCheckbox" required>
+                        <label for="confirmCheckbox" class="ml-2">
+                            I confirm that this maintenance has been completed and the component hours should be updated.
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" id="confirmBtn" disabled>
+                            <i class="fa fa-check"></i> Confirm Maintenance
+                        </button>
+                        <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Panel -->
+    <div class="col-lg-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="text-primary">
+                    <i class="fa fa-info-circle"></i> What happens when you confirm?
+                </h6>
+                <ul>
+                    <li>Component maintenance hours will be increased by <strong>{{ maintenance.maintenance_hours_added }} hours</strong></li>
+                    <li>Maintenance status will be updated to "Operational"</li>
+                    <li>Record will be moved to historical maintenances</li>
+                    <li>All changes are logged with your username and timestamp</li>
+                </ul>
+                
+                <hr>
+                
+                <h6 class="text-primary">
+                    <i class="fa fa-lightbulb-o"></i> Need to reschedule?
+                </h6>
+                <p class="small">
+                    If the maintenance hasn't been completed yet, go back and edit the schedule dates instead of confirming.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmCheckbox').addEventListener('change', function() {
+    document.getElementById('confirmBtn').disabled = !this.checked;
+});
+</script>
+{% endblock content %}

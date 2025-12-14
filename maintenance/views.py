@@ -19,11 +19,15 @@ from django_tables2 import SingleTableView
 from flight_dispatch.models import Flight
 from .filters import AircraftFilter
 from .forms import AircraftMainComponentForm, AircraftSubComponentForm, FlightTechLogForm, AircraftFormUpdate, \
-    AircraftFormAdd, AircraftMaintenanceTechLogForm, CloneComponentForm
+    AircraftFormAdd, AircraftMaintenanceTechLogForm, CloneComponentForm,ComponentMaintenanceForm, \
+    BulkComponentMaintenanceConfirmForm
+
 from .models import Aircraft, AircraftMainComponent, AircraftSubComponent, AircraftMaintenanceTechLog, FlightTechLog, \
     AircraftSub3Component, AircraftSub2Component,ComponentMaintenance,AircraftMaintenance
+
 from .tables import AircraftTable, SubComponentTable, MainComponentTable, AircraftMaintenanceTechLogTable, \
     FlightTechLogTable, FlightTablePendingTechlog
+
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 import uuid
@@ -723,6 +727,374 @@ def component_tree_view(request):
 # COMPLETE MAINTENANCE SCHEDULING VIEWS, Manaul Maintenance View
 #=====================================================================
 
+# ============================================================================
+# AJAX ENDPOINTS
+# ============================================================================
+
+@login_required
+def search_components_ajax(request):
+    """
+    AJAX endpoint to search components by aircraft, level, and search term.
+    Returns JSON with matching components.
+    """
+    aircraft_id = request.GET.get('aircraft_id')
+    component_level = request.GET.get('component_level')
+    search_term = request.GET.get('search_term', '').strip()
+    
+    if not aircraft_id or not component_level:
+        return JsonResponse({'results': []})
+    
+    # Get the model class
+    model_map = {
+        'aircraftmaincomponent': AircraftMainComponent,
+        'aircraftsubcomponent': AircraftSubComponent,
+        'aircraftsub2component': AircraftSub2Component,
+        'aircraftsub3component': AircraftSub3Component,
+    }
+    
+    model_class = model_map.get(component_level)
+    if not model_class:
+        return JsonResponse({'results': []})
+    
+    # Build query based on component level
+    if component_level == 'aircraftmaincomponent':
+        queryset = model_class.objects.filter(aircraft_attached_id=aircraft_id)
+    elif component_level == 'aircraftsubcomponent':
+        queryset = model_class.objects.filter(
+            parent_component__aircraft_attached_id=aircraft_id
+        )
+    elif component_level == 'aircraftsub2component':
+        queryset = model_class.objects.filter(
+            parent_sub_component__parent_component__aircraft_attached_id=aircraft_id
+        )
+    else:  # aircraftsub3component
+        queryset = model_class.objects.filter(
+            parent_sub2_component__parent_sub_component__parent_component__aircraft_attached_id=aircraft_id
+        )
+    
+    # Filter by status - only show attached components
+    queryset = queryset.filter(component_status='Attached')
+    
+    # Apply search filter
+    if search_term:
+        queryset = queryset.filter(
+            Q(component_name__icontains=search_term) |
+            Q(serial_number__icontains=search_term) |
+            Q(part_number__icontains=search_term)
+        )
+    
+    # Limit results
+    queryset = queryset[:20]
+    
+    # Format results
+    results = []
+    content_type = ContentType.objects.get_for_model(model_class)
+    
+    for component in queryset:
+        results.append({
+            'id': component.id,
+            'content_type_id': content_type.id,
+            'text': f"{component.component_name} - S/N: {component.serial_number} (Hours: {component.maintenance_hours})",
+            'component_name': component.component_name,
+            'serial_number': component.serial_number,
+            'maintenance_hours': str(component.maintenance_hours),
+            'part_number': component.part_number
+        })
+    
+    return JsonResponse({'results': results})
+
+
+# ============================================================================
+# COMPONENT MAINTENANCE VIEWS
+# ============================================================================
+
+class ComponentMaintenanceListView(LoginRequiredMixin, ListView):
+    """
+    List view for component maintenance schedules with status-based filtering.
+    Supports three main views: Scheduled, Expired, Historical
+    """
+    model = ComponentMaintenance
+    template_name = 'maintenance/schedule/maintenance_list.html'
+    context_object_name = 'maintenances'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Get filter parameters
+        status = self.request.GET.get('status', 'scheduled')
+        aircraft_id = self.request.GET.get('aircraft')
+        component_type = self.request.GET.get('component_type')
+        search = self.request.GET.get('search')
+        
+        # Filter by status
+        now = timezone.now()
+        
+        if status == 'scheduled':
+            # Only future scheduled maintenances
+            queryset = queryset.filter(
+                start_date__gte=now,
+                main_type_schedule='Maintenance'
+            )
+        elif status == 'pending_confirmation':
+            # Scheduled but needs confirmation
+            queryset = queryset.filter(
+                start_date__gte=now,
+                main_type_schedule='Maintenance'
+            )
+        elif status == 'completed':
+            # Past maintenances
+            queryset = queryset.filter(
+                Q(end_date__lt=now) | Q(main_type_schedule='Operational')
+            )
+        elif status == 'expired':
+            # Scheduled but never confirmed and date passed
+            queryset = queryset.filter(
+                start_date__lt=now,
+                end_date__lt=now,
+                main_type_schedule='Maintenance'
+            )
+        
+        # Filter by aircraft
+        if aircraft_id:
+            queryset = self._filter_by_aircraft(queryset, aircraft_id)
+        
+        # Filter by component type
+        if component_type:
+            try:
+                ct = ContentType.objects.get(model=component_type)
+                queryset = queryset.filter(content_type=ct)
+            except ContentType.DoesNotExist:
+                pass
+        
+        # Search filter
+        if search:
+            queryset = queryset.filter(
+                Q(remarks__icontains=search) |
+                Q(maintenance_type__icontains=search)
+            )
+        
+        return queryset.order_by('-start_date')
+    
+    def _filter_by_aircraft(self, queryset, aircraft_id):
+        """Filter maintenance records by aircraft"""
+        filtered_ids = []
+        
+        for maintenance in queryset:
+            component = maintenance.component_to_maintain
+            aircraft = None
+            
+            # Get aircraft based on component type
+            if hasattr(component, 'aircraft_attached'):
+                aircraft = component.aircraft_attached
+            elif hasattr(component, 'parent_component'):
+                aircraft = component.parent_component.aircraft_attached
+            elif hasattr(component, 'parent_sub_component'):
+                aircraft = component.parent_sub_component.parent_component.aircraft_attached
+            elif hasattr(component, 'parent_sub2_component'):
+                aircraft = component.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached
+            
+            if aircraft and str(aircraft.id) == aircraft_id:
+                filtered_ids.append(maintenance.id)
+        
+        return queryset.filter(id__in=filtered_ids)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['aircrafts'] = Aircraft.objects.all()
+        context['status'] = self.request.GET.get('status', 'scheduled')
+        context['now'] = timezone.now()
+        
+        # Count statistics
+        now = timezone.now()
+        context['scheduled_count'] = ComponentMaintenance.objects.filter(
+            start_date__gte=now, 
+            main_type_schedule='Maintenance'
+        ).count()
+        
+        context['expired_count'] = ComponentMaintenance.objects.filter(
+            start_date__lt=now,
+            end_date__lt=now,
+            main_type_schedule='Maintenance'
+        ).count()
+        
+        context['completed_count'] = ComponentMaintenance.objects.filter(
+            Q(end_date__lt=now) | Q(main_type_schedule='Operational')
+        ).count()
+        
+        return context
+
+
+class ComponentMaintenanceCreateView(LoginRequiredMixin, CreateView):
+    """Create view for scheduling component maintenance"""
+    model = ComponentMaintenance
+    form_class = ComponentMaintenanceForm
+    template_name = 'maintenance/schedule/maintenance_form.html'
+    success_url = reverse_lazy('component_maintenance_list')
+    
+    def form_valid(self, form):
+        form.instance.added_by = self.request.user
+        messages.success(self.request, 'Component maintenance scheduled successfully.')
+        return super().form_valid(form)
+
+
+class ComponentMaintenanceUpdateView(LoginRequiredMixin, UpdateView):
+    """Update view for component maintenance"""
+    model = ComponentMaintenance
+    form_class = ComponentMaintenanceForm
+    template_name = 'maintenance/schedule/maintenance_form.html'
+    success_url = reverse_lazy('component_maintenance_list')
+    
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user.username
+        form.instance.updated_date = timezone.now()
+        messages.success(self.request, 'Component maintenance updated successfully.')
+        return super().form_valid(form)
+
+
+class ComponentMaintenanceDetailView(LoginRequiredMixin, DetailView):
+    """Detail view for component maintenance"""
+    model = ComponentMaintenance
+    template_name = 'maintenance/schedule/maintenance_detail.html'
+    context_object_name = 'maintenance'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        maintenance = self.object
+        
+        # Get component details
+        component = maintenance.component_to_maintain
+        context['component'] = component
+        context['component_details'] = maintenance.get_component_details()
+        context['now'] = timezone.now()
+        
+        # Get aircraft
+        if hasattr(component, 'aircraft_attached'):
+            context['aircraft'] = component.aircraft_attached
+        elif hasattr(component, 'parent_component'):
+            context['aircraft'] = component.parent_component.aircraft_attached
+        elif hasattr(component, 'parent_sub_component'):
+            context['aircraft'] = component.parent_sub_component.parent_component.aircraft_attached
+        elif hasattr(component, 'parent_sub2_component'):
+            context['aircraft'] = component.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached
+        
+        return context
+
+
+# ============================================================================
+# CONFIRMATION ACTIONS
+# ============================================================================
+
+@login_required
+def confirm_component_maintenance(request, pk):
+    """
+    Confirm a scheduled maintenance and update component hours.
+    This is called when a single maintenance is confirmed.
+    """
+    maintenance = get_object_or_404(ComponentMaintenance, pk=pk)
+    component = maintenance.component_to_maintain
+    
+    if request.method == 'POST':
+        # Update component maintenance hours
+        component.maintenance_hours += maintenance.maintenance_hours_added
+        component.updated_by = request.user.username
+        component.updated_date = timezone.now()
+        
+        # If component was in maintenance status, return to operational
+        if component.component_status == 'Maintenance':
+            component.component_status = 'Attached'
+        if component.maintenance_status == 'Maintenance':
+            component.maintenance_status = 'Operational'
+        
+        component.save()
+        
+        # Update maintenance status
+        maintenance.main_type_schedule = 'Operational'
+        maintenance.updated_by = request.user.username
+        maintenance.updated_date = timezone.now()
+        
+        # Add confirmation notes if provided
+        confirmation_notes = request.POST.get('confirmation_notes', '')
+        if confirmation_notes:
+            maintenance.remarks += f"\n\nConfirmation Notes ({timezone.now().strftime('%Y-%m-%d %H:%M')} by {request.user.username}): {confirmation_notes}"
+        
+        maintenance.save()
+        
+        messages.success(
+            request, 
+            f'Maintenance confirmed! {component.component_name} hours updated: {component.maintenance_hours - maintenance.maintenance_hours_added} → {component.maintenance_hours} (+{maintenance.maintenance_hours_added} hours)'
+        )
+        return redirect('component_maintenance_list')
+    
+    return render(request, 'maintenance/schedule/maintenance_confirm.html', {
+        'maintenance': maintenance,
+        'component': component
+    })
+
+
+@login_required
+def bulk_confirm_maintenances(request):
+    """
+    Bulk confirm multiple scheduled maintenances.
+    Updates all selected components and moves maintenances to historical.
+    """
+    if request.method == 'POST':
+        form = BulkComponentMaintenanceConfirmForm(request.POST)
+        if form.is_valid():
+            maintenance_ids = form.cleaned_data['maintenance_ids']
+            confirmation_notes = form.cleaned_data.get('confirmation_notes', '')
+            
+            confirmed_count = 0
+            failed_count = 0
+            
+            for maintenance_id in maintenance_ids:
+                try:
+                    maintenance = ComponentMaintenance.objects.get(pk=maintenance_id)
+                    component = maintenance.component_to_maintain
+                    
+                    # Update component hours
+                    component.maintenance_hours += maintenance.maintenance_hours_added
+                    component.updated_by = request.user.username
+                    component.updated_date = timezone.now()
+                    
+                    # Update component status if in maintenance
+                    if component.component_status == 'Maintenance':
+                        component.component_status = 'Attached'
+                    if component.maintenance_status == 'Maintenance':
+                        component.maintenance_status = 'Operational'
+                    
+                    component.save()
+                    
+                    # Update maintenance status
+                    maintenance.main_type_schedule = 'Operational'
+                    maintenance.updated_by = request.user.username
+                    maintenance.updated_date = timezone.now()
+                    
+                    if confirmation_notes:
+                        maintenance.remarks += f"\n\nBulk Confirmation ({timezone.now().strftime('%Y-%m-%d %H:%M')} by {request.user.username}): {confirmation_notes}"
+                    
+                    maintenance.save()
+                    confirmed_count += 1
+                    
+                except ComponentMaintenance.DoesNotExist:
+                    failed_count += 1
+                    continue
+                except Exception as e:
+                    failed_count += 1
+                    messages.warning(request, f'Failed to confirm maintenance ID {maintenance_id}: {str(e)}')
+                    continue
+            
+            if confirmed_count > 0:
+                messages.success(request, f'Successfully confirmed {confirmed_count} maintenance schedule(s).')
+            
+            if failed_count > 0:
+                messages.warning(request, f'{failed_count} maintenance(s) could not be confirmed.')
+            
+            return redirect('component_maintenance_list')
+    
+    return redirect('component_maintenance_list')
+
+
 
 # ===================================================================
 # AIRCRAFT MAINTENANCE VIEWS
@@ -831,83 +1203,6 @@ class AircraftMaintenanceDetailView(LoginRequiredMixin, DetailView):
 # COMPONENT MAINTENANCE VIEWS
 # ===================================================================
 
-class ComponentMaintenanceListView(LoginRequiredMixin, ListView):
-    model = ComponentMaintenance
-    template_name = 'maintenance/schedule/component_maintenance_list.html'
-    context_object_name = 'maintenance_schedules'
-    paginate_by = 50
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        aircraft_id = self.request.GET.get('aircraft')
-        component_level = self.request.GET.get('component_level')
-        maintenance_type = self.request.GET.get('maintenance_type')
-        schedule_type = self.request.GET.get('schedule_type')
-        start_date_from = self.request.GET.get('start_date_from')
-        start_date_to = self.request.GET.get('start_date_to')
-        search_term = self.request.GET.get('search_term')
-        batch_id = self.request.GET.get('batch_id')
-        
-        if batch_id:
-            queryset = queryset.filter(update_comments__icontains=batch_id)
-        if component_level:
-            content_type = ContentType.objects.get(model=component_level)
-            queryset = queryset.filter(content_type=content_type)
-        if aircraft_id:
-            aircraft = get_object_or_404(Aircraft, pk=aircraft_id)
-            main_components = AircraftMainComponent.objects.filter(aircraft_attached=aircraft)
-            sub_components = AircraftSubComponent.objects.filter(parent_component__in=main_components)
-            sub2_components = AircraftSub2Component.objects.filter(parent_sub_component__in=sub_components)
-            sub3_components = AircraftSub3Component.objects.filter(parent_sub2_component__in=sub2_components)
-            
-            q_objects = Q()
-            for component in main_components:
-                q_objects |= Q(content_type__model='aircraftmaincomponent', object_id=component.id)
-            for component in sub_components:
-                q_objects |= Q(content_type__model='aircraftsubcomponent', object_id=component.id)
-            for component in sub2_components:
-                q_objects |= Q(content_type__model='aircraftsub2component', object_id=component.id)
-            for component in sub3_components:
-                q_objects |= Q(content_type__model='aircraftsub3component', object_id=component.id)
-            queryset = queryset.filter(q_objects)
-        
-        if maintenance_type:
-            queryset = queryset.filter(maintenance_type=maintenance_type)
-        if schedule_type:
-            queryset = queryset.filter(main_type_schedule=schedule_type)
-        if start_date_from:
-            queryset = queryset.filter(start_date__gte=start_date_from)
-        if start_date_to:
-            queryset = queryset.filter(start_date__lte=start_date_to)
-        if search_term:
-            q_objects = Q()
-            for model_class in [AircraftMainComponent, AircraftSubComponent, AircraftSub2Component, AircraftSub3Component]:
-                components = model_class.objects.filter(
-                    Q(component_name__icontains=search_term) | Q(serial_number__icontains=search_term)
-                )
-                content_type = ContentType.objects.get_for_model(model_class)
-                for component in components:
-                    q_objects |= Q(content_type=content_type, object_id=component.id)
-            queryset = queryset.filter(q_objects)
-        
-        return queryset.order_by('-start_date')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['aircrafts'] = Aircraft.objects.all()
-        batch_ids = ComponentMaintenance.objects.exclude(
-            update_comments__isnull=True).exclude(update_comments='').values_list('update_comments', flat=True).distinct()
-        extracted_ids = []
-        for comment in batch_ids:
-            if 'MAINT-' in comment:
-                id_part = comment.split('MAINT-')[-1]
-                full_id = f'MAINT-{id_part}'
-                if full_id not in extracted_ids:
-                    extracted_ids.append(full_id)
-        context['batch_ids'] = sorted(extracted_ids, reverse=True)
-        return context
-
-
 @login_required
 def component_maintenance_create(request):
     """Create component maintenance schedules"""
@@ -974,69 +1269,6 @@ def component_maintenance_create(request):
     
     context = {'aircrafts': Aircraft.objects.all()}
     return render(request, 'maintenance/schedule/component_maintenance_create.html', context)
-
-
-class ComponentMaintenanceUpdateView(LoginRequiredMixin, UpdateView):
-    model = ComponentMaintenance
-    template_name = 'maintenance/schedule/component_maintenance_update.html'
-    success_url = reverse_lazy('component_maintenance_list')
-    fields = ['main_type_schedule', 'maintenance_type', 'maintenance_hours', 'maintenance_hours_added',
-              'start_date', 'end_date', 'remarks', 'maintenance_report', 'update_comments']
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        for field_name, field in form.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-        form.fields['start_date'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'})
-        form.fields['end_date'].widget = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'})
-        form.fields['update_comments'].required = True
-        form.fields['update_comments'].widget = forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
-        return form
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        maintenance = self.object
-        component = maintenance.component_to_maintain
-        context['component'] = component
-        context['component_type_name'] = maintenance.component_type_name
-        
-        if maintenance.is_main_component:
-            context['aircraft'] = component.aircraft_attached
-        elif maintenance.is_sub_component:
-            context['aircraft'] = component.parent_component.aircraft_attached
-        elif maintenance.is_sub2_component:
-            context['aircraft'] = component.parent_sub_component.parent_component.aircraft_attached
-        elif maintenance.is_sub3_component:
-            context['aircraft'] = component.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached
-        return context
-    
-    def form_valid(self, form):
-        form.instance.updated_by = self.request.user.username
-        form.instance.updated_date = timezone.now()
-        response = super().form_valid(form)
-        messages.success(self.request, 'Schedule updated successfully.')
-        return response
-
-
-class ComponentMaintenanceDetailView(LoginRequiredMixin, DetailView):
-    model = ComponentMaintenance
-    template_name = 'maintenance/schedule/component_maintenance_detail.html'
-    context_object_name = 'maintenance'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        maintenance = self.object
-        
-        if maintenance.update_comments and 'Batch: MAINT-' in maintenance.update_comments:
-            batch_id = maintenance.update_comments.split('Batch: ')[-1]
-            context['batch_records'] = ComponentMaintenance.objects.filter(
-                update_comments__icontains=f'Batch: {batch_id}'
-            ).exclude(pk=maintenance.pk)
-            context['batch_id'] = batch_id
-            context['is_batch'] = True
-        else:
-            context['is_batch'] = False
-        return context
 
 
 # ===================================================================
@@ -1388,8 +1620,6 @@ def maintenance_dashboard(request):
 
 
 
-@login_required
-def search_components_ajax(request):
     """
     AJAX endpoint to search components with filters
     Used for enhanced component selection with search

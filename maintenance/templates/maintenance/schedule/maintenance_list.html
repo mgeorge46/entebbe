@@ -1,0 +1,376 @@
+{% extends "includes/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block greetings %}Component Maintenance Schedules{% endblock greetings %}
+{% block breadtext1 %}Maintenance{% endblock breadtext1 %}
+{% block breadtext2 %}Component{% endblock breadtext2 %}
+{% block breadtext3 %}Schedules{% endblock breadtext3 %}
+
+{% block content %}
+<style>
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .badge-scheduled {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .badge-expired {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .badge-completed {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .stat-card {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-4 col-sm-6">
+        <div class="card stat-card" onclick="window.location.href='?status=scheduled'">
+            <div class="stat-widget-one card-body">
+                <div class="stat-icon d-inline-block">
+                    <i class="ti-calendar text-primary border-primary"></i>
+                </div>
+                <div class="stat-content d-inline-block">
+                    <div class="stat-text">Scheduled</div>
+                    <div class="stat-digit">{{ scheduled_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-sm-6">
+        <div class="card stat-card" onclick="window.location.href='?status=expired'">
+            <div class="stat-widget-one card-body">
+                <div class="stat-icon d-inline-block">
+                    <i class="ti-alert text-danger border-danger"></i>
+                </div>
+                <div class="stat-content d-inline-block">
+                    <div class="stat-text">Expired/Unconfirmed</div>
+                    <div class="stat-digit">{{ expired_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-sm-6">
+        <div class="card stat-card" onclick="window.location.href='?status=completed'">
+            <div class="stat-widget-one card-body">
+                <div class="stat-icon d-inline-block">
+                    <i class="ti-check-box text-success border-success"></i>
+                </div>
+                <div class="stat-content d-inline-block">
+                    <div class="stat-text">Completed</div>
+                    <div class="stat-digit">{{ completed_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Actions -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row align-items-end">
+            <div class="col-md-3">
+                <label>Aircraft</label>
+                <select name="aircraft" class="form-control">
+                    <option value="">All Aircraft</option>
+                    {% for aircraft in aircrafts %}
+                    <option value="{{ aircraft.id }}" {% if request.GET.aircraft == aircraft.id|stringformat:"s" %}selected{% endif %}>
+                        {{ aircraft.abbreviation }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label>Component Type</label>
+                <select name="component_type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="aircraftmaincomponent" {% if request.GET.component_type == "aircraftmaincomponent" %}selected{% endif %}>Main Component</option>
+                    <option value="aircraftsubcomponent" {% if request.GET.component_type == "aircraftsubcomponent" %}selected{% endif %}>Sub Component</option>
+                    <option value="aircraftsub2component" {% if request.GET.component_type == "aircraftsub2component" %}selected{% endif %}>Sub2 Component</option>
+                    <option value="aircraftsub3component" {% if request.GET.component_type == "aircraftsub3component" %}selected{% endif %}>Sub3 Component</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label>Search</label>
+                <input type="text" name="search" class="form-control" 
+                       placeholder="Search remarks..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'component_maintenance_create' %}" class="btn btn-success">
+                    <i class="fa fa-plus"></i> Schedule
+                </a>
+            </div>
+            
+            <!-- Hidden status field -->
+            <input type="hidden" name="status" value="{{ status }}">
+        </form>
+    </div>
+</div>
+
+<!-- Status Tabs -->
+<div class="card">
+    <div class="card-body">
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a href="?status=scheduled" class="nav-link {% if status == 'scheduled' %}active{% endif %}">
+                    <i class="ti-calendar"></i> Scheduled (Future)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?status=expired" class="nav-link {% if status == 'expired' %}active{% endif %}">
+                    <i class="ti-alert"></i> Expired/Unconfirmed
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?status=completed" class="nav-link {% if status == 'completed' %}active{% endif %}">
+                    <i class="ti-check"></i> Historical/Completed
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Bulk Actions (only for scheduled) -->
+        {% if status == 'scheduled' %}
+        <div class="mb-3">
+            <button type="button" class="btn btn-sm btn-info" id="bulkConfirmBtn" disabled>
+                <i class="fa fa-check-circle"></i> Confirm Selected
+            </button>
+            <span class="ml-2" id="selectedCount">0 selected</span>
+        </div>
+        {% endif %}
+        
+        <!-- Maintenance Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        {% if status == 'scheduled' %}
+                        <th width="30">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        {% endif %}
+                        <th>Component</th>
+                        <th>Aircraft</th>
+                        <th>Type</th>
+                        <th>Level</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Hours</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for maintenance in maintenances %}
+                    <tr>
+                        {% if status == 'scheduled' %}
+                        <td>
+                            <input type="checkbox" class="maintenance-checkbox" value="{{ maintenance.id }}">
+                        </td>
+                        {% endif %}
+                        <td>
+                            <strong>{{ maintenance.component_to_maintain.component_name }}</strong><br>
+                            <small class="text-muted">S/N: {{ maintenance.component_to_maintain.serial_number }}</small>
+                        </td>
+                        <td>
+                            {% if maintenance.is_main_component %}
+                                {{ maintenance.component_to_maintain.aircraft_attached.abbreviation }}
+                            {% elif maintenance.is_sub_component %}
+                                {{ maintenance.component_to_maintain.parent_component.aircraft_attached.abbreviation }}
+                            {% elif maintenance.is_sub2_component %}
+                                {{ maintenance.component_to_maintain.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                            {% elif maintenance.is_sub3_component %}
+                                {{ maintenance.component_to_maintain.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-info">{{ maintenance.maintenance_type }}</span>
+                        </td>
+                        <td>
+                            <small>{{ maintenance.component_level }}</small>
+                        </td>
+                        <td>{{ maintenance.start_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ maintenance.end_date|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <strong>{{ maintenance.maintenance_hours }}</strong>
+                            {% if maintenance.maintenance_hours_added %}
+                                <br><small class="text-success">+{{ maintenance.maintenance_hours_added }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if status == 'scheduled' %}
+                                <span class="status-badge badge-scheduled">Scheduled</span>
+                            {% elif status == 'expired' %}
+                                <span class="status-badge badge-expired">Expired</span>
+                            {% else %}
+                                <span class="status-badge badge-completed">Completed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'component_maintenance_detail' maintenance.pk %}" 
+                               class="btn btn-sm btn-primary" title="View">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            
+                            {% if status == 'scheduled' %}
+                            <a href="{% url 'component_maintenance_update' maintenance.pk %}" 
+                               class="btn btn-sm btn-secondary" title="Edit">
+                                <i class="fa fa-pencil"></i>
+                            </a>
+                            <a href="{% url 'confirm_component_maintenance' maintenance.pk %}" 
+                               class="btn btn-sm btn-success" title="Confirm">
+                                <i class="fa fa-check"></i>
+                            </a>
+                            {% elif status == 'expired' %}
+                            <a href="{% url 'component_maintenance_update' maintenance.pk %}" 
+                               class="btn btn-sm btn-warning" title="Reschedule">
+                                <i class="fa fa-calendar"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if status == 'scheduled' %}10{% else %}9{% endif %}" class="text-center">
+                            <p class="my-4">
+                                <i class="fa fa-inbox fa-3x text-muted"></i><br>
+                                No maintenance schedules found.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&status={{ status }}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ status }}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bulk Confirmation Modal -->
+<div class="modal fade" id="bulkConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Selected Maintenances</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'bulk_confirm_maintenances' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>You are about to confirm <strong id="confirmCount">0</strong> maintenance schedule(s).</p>
+                    <p>This will update the maintenance hours for the selected components.</p>
+                    
+                    <div class="form-group">
+                        <label>Confirmation Notes (Optional)</label>
+                        <textarea name="confirmation_notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <input type="hidden" name="maintenance_ids" id="bulkMaintenanceIds">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-check"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Select all checkbox
+    $('#selectAll').change(function() {
+        $('.maintenance-checkbox').prop('checked', this.checked);
+        updateBulkActions();
+    });
+    
+    // Individual checkboxes
+    $('.maintenance-checkbox').change(function() {
+        updateBulkActions();
+    });
+    
+    // Bulk confirm button
+    $('#bulkConfirmBtn').click(function() {
+        const selectedIds = getSelectedIds();
+        if (selectedIds.length > 0) {
+            $('#confirmCount').text(selectedIds.length);
+            $('#bulkMaintenanceIds').val(selectedIds.join(','));
+            $('#bulkConfirmModal').modal('show');
+        }
+    });
+    
+    function updateBulkActions() {
+        const selectedCount = $('.maintenance-checkbox:checked').length;
+        $('#selectedCount').text(selectedCount + ' selected');
+        $('#bulkConfirmBtn').prop('disabled', selectedCount === 0);
+    }
+    
+    function getSelectedIds() {
+        const ids = [];
+        $('.maintenance-checkbox:checked').each(function() {
+            ids.push($(this).val());
+        });
+        return ids;
+    }
+});
+</script>
+{% endblock content %}
