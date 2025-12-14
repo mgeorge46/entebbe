@@ -219,7 +219,7 @@ $(document).ready(function() {
         
         searchTimeout = setTimeout(function() {
             $.ajax({
-                url: '{% url "ajax_search_components" %}',
+                url: '{% url "search_components_ajax" %}',
                 data: {
                     'aircraft_id': aircraftId,
                     'component_level': componentLevel,

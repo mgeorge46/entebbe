@@ -730,13 +730,9 @@ def component_tree_view(request):
 # ============================================================================
 # AJAX ENDPOINTS
 # ============================================================================
-
 @login_required
 def search_components_ajax(request):
-    """
-    AJAX endpoint to search components by aircraft, level, and search term.
-    Returns JSON with matching components.
-    """
+    """AJAX endpoint to search components by aircraft, level, and search term"""
     aircraft_id = request.GET.get('aircraft_id')
     component_level = request.GET.get('component_level')
     search_term = request.GET.get('search_term', '').strip()
@@ -744,7 +740,7 @@ def search_components_ajax(request):
     if not aircraft_id or not component_level:
         return JsonResponse({'results': []})
     
-    # Get the model class
+    # Map component level to model class
     model_map = {
         'aircraftmaincomponent': AircraftMainComponent,
         'aircraftsubcomponent': AircraftSubComponent,
@@ -772,7 +768,7 @@ def search_components_ajax(request):
             parent_sub2_component__parent_sub_component__parent_component__aircraft_attached_id=aircraft_id
         )
     
-    # Filter by status - only show attached components
+    # Only show attached components
     queryset = queryset.filter(component_status='Attached')
     
     # Apply search filter
@@ -802,7 +798,6 @@ def search_components_ajax(request):
         })
     
     return JsonResponse({'results': results})
-
 
 # ============================================================================
 # COMPONENT MAINTENANCE VIEWS
