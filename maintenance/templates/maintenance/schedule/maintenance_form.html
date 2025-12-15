@@ -1,195 +1,260 @@
 {% extends "includes/base.html" %}
-{% load crispy_forms_tags %}
-{% block greetings %}
-{% if form.instance.pk %}
-Update Component Maintenance Schedule
-{% else %}
-Schedule Component Maintenance
-{% endif %}
-{% endblock greetings %}
-
+{% block greetings %}Schedule Component Maintenance{% endblock greetings %}
 {% block breadtext1 %}Maintenance{% endblock breadtext1 %}
 {% block breadtext2 %}Component{% endblock breadtext2 %}
 {% block breadtext3 %}Schedule{% endblock breadtext3 %}
 
 {% block content %}
 <style>
-    .component-results {
-        position: absolute;
-        z-index: 1000;
-        background: white;
-        border: 1px solid #ddd;
-        max-height: 300px;
-        overflow-y: auto;
-        width: 100%;
-        display: none;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    .step-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #007bff;
     }
     
-    .component-result-item {
-        padding: 10px;
+    .step-number {
+        display: inline-block;
+        width: 35px;
+        height: 35px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 35px;
+        margin-right: 10px;
+    }
+    
+    .component-checkbox {
         cursor: pointer;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 10px;
+        border: 2px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        transition: all 0.3s;
     }
     
-    .component-result-item:hover {
-        background-color: #f8f9fa;
+    .component-checkbox:hover {
+        background: #f0f0f0;
     }
     
-    .component-result-item .component-name {
+    .component-checkbox.selected {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+    
+    .component-checkbox.critical {
+        border-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .selected-badge {
+        background: #28a745;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 15px;
         font-weight: bold;
-        color: #3B7CFF;
     }
     
-    .component-result-item .component-details {
-        font-size: 0.9em;
-        color: #6c757d;
-    }
-    
-    .selected-component-info {
-        background-color: #e7f3ff;
-        border: 1px solid #3B7CFF;
-        border-radius: 4px;
-        padding: 15px;
-        margin-top: 10px;
-        display: none;
-    }
-    
-    .selected-component-info h6 {
-        color: #3B7CFF;
-        margin-bottom: 10px;
-    }
-    
-    #component-search-container {
-        position: relative;
+    .critical-badge {
+        background: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
     }
 </style>
 
 <div class="row">
-    <div class="col-lg-10">
-        <div class="card">
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" id="maintenanceForm">
-                    {% csrf_token %}
-                    
-                    {% if form.errors %}
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <strong>Please correct the following errors:</strong>
-                        <ul>
-                            {% for field, errors in form.errors.items %}
-                                {% for error in errors %}
-                                    <li>{{ field }}: {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-                        </ul>
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <div class="col-lg-9">
+        <form method="POST" id="maintenanceForm">
+            {% csrf_token %}
+            
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            <!-- STEP 1: Select Aircraft -->
+            <div class="step-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="step-number">1</span>
+                        <strong>Select Aircraft</strong>
                     </div>
-                    {% endif %}
-                    
-                    <!-- Component Selection Section -->
-                    <div class="card mb-3">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Component Selection</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="id_aircraft">Aircraft *</label>
-                                        {{ form.aircraft }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="id_component_level">Component Level *</label>
-                                        {{ form.component_level }}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group" id="component-search-container">
-                                        <label for="id_component_search">Search Component *</label>
-                                        {{ form.component_search }}
-                                        <small class="form-text text-muted">
-                                            Type component name or serial number to search
-                                        </small>
-                                        <div class="component-results" id="componentResults"></div>
-                                    </div>
-                                    
-                                    <!-- Selected component info -->
-                                    <div class="selected-component-info" id="selectedComponentInfo">
-                                        <h6>Selected Component:</h6>
-                                        <div id="selectedComponentDetails"></div>
-                                    </div>
-                                    
-                                    <!-- Hidden fields -->
-                                    {{ form.content_type_id }}
-                                    {{ form.object_id }}
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                <select name="aircraft" id="aircraft_select" class="form-control form-control-lg" required>
+                    <option value="">-- Select Aircraft --</option>
+                    {% for aircraft in aircrafts %}
+                    <option value="{{ aircraft.id }}">
+                        {{ aircraft.abbreviation }} - {{ aircraft.registration_number }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- STEP 2: Select Component Level -->
+            <div class="step-section" id="step2" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="step-number">2</span>
+                        <strong>Select Component Level</strong>
                     </div>
-                    
-                    <!-- Maintenance Details Section -->
-                    <div class="card mb-3">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Maintenance Details</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.main_type_schedule|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.maintenance_type|as_crispy_field }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    
-                                </div>
-                                <div class="col-md-6">
-                                   
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.start_date|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.end_date|as_crispy_field }}
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-12">
-                                    
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-12">
-                                    
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                <select name="component_type" id="component_type_select" class="form-control form-control-lg" required disabled>
+                    <option value="">-- Select Level --</option>
+                    <option value="aircraftmaincomponent">Main Component (Level 0)</option>
+                    <option value="aircraftsubcomponent">Sub Component (Level 1)</option>
+                    <option value="aircraftsub2component">Sub Component (Level 2)</option>
+                    <option value="aircraftsub3component">Sub Component (Level 3)</option>
+                </select>
+            </div>
+            
+            <!-- STEP 3: FIXED - Select Components with Search -->
+            <div class="step-section" id="step3" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="step-number">3</span>
+                        <strong>Select Components (Multiple Allowed)</strong>
+                        <span class="selected-badge ml-2" id="selected_count" style="display:none;">0 selected</span>
                     </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fa fa-check"></i> 
-                            {% if form.instance.pk %}Update{% else %}Schedule{% endif %} Maintenance
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="input-group mb-3">
+                    <input type="text" id="component_search" class="form-control" 
+                           placeholder="🔍 Search by name, serial number, or part number..." disabled>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="clear_search" disabled>
+                            <i class="fa fa-times"></i>
                         </button>
-                        <a href="{% url 'component_maintenance_list' %}" class="btn btn-warning">
-                            <i class="fa fa-times"></i> Cancel
-                        </a>
                     </div>
-                </form>
+                </div>
+                
+                <!-- Helper Buttons -->
+                <div class="btn-toolbar mb-3" role="toolbar">
+                    <div class="btn-group mr-2" role="group">
+                        <button type="button" class="btn btn-sm btn-primary" id="select_all" disabled>
+                            <i class="fa fa-check-square"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="clear_all" disabled>
+                            <i class="fa fa-square-o"></i> Clear All
+                        </button>
+                    </div>
+                    <div class="btn-group mr-2" role="group">
+                        <button type="button" class="btn btn-sm btn-danger" id="filter_critical" disabled>
+                            <i class="fa fa-exclamation-triangle"></i> Critical Only
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success" id="filter_all" disabled>
+                            <i class="fa fa-list"></i> Show All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="components_loading" style="display:none; text-align:center; padding:40px;">
+                    <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Loading components...</p>
+                </div>
+                
+                <!-- Components List -->
+                <div id="components_container" style="display:none;">
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>Batch Mode:</strong> Select multiple components to schedule them together.
+                    </div>
+                    <div id="components_list" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                        <!-- Components loaded via AJAX -->
+                    </div>
+                </div>
+                
+                <div id="no_components" class="alert alert-warning" style="display:none;">
+                    <i class="fa fa-exclamation-triangle"></i> 
+                    No components found for this aircraft and component type.
+                </div>
+            </div>
+            
+            <!-- STEP 4: Schedule Details (No completion fields) -->
+            <div class="step-section" id="step4" style="display:none;">
+                <div class="mb-3">
+                    <span class="step-number">4</span>
+                    <strong>Maintenance Schedule Details</strong>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <strong>Note:</strong> Completion details will be captured when you sign off the completed work.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Schedule Type <span class="text-danger">*</span></label>
+                            <select name="main_type_schedule" class="form-control" required>
+                                <option value="Operational">📋 Manual Schedule</option>
+                                <option value="Maintenance">🤖 Automated</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Maintenance Type <span class="text-danger">*</span></label>
+                            <select name="maintenance_type" class="form-control" required>
+                                <option value="">-- Select --</option>
+                                <option value="Class_A">Class A</option>
+                                <option value="Class_B">Class B</option>
+                                <option value="Class_C">Class C</option>
+                                <option value="Class_D">Class D</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Scheduled Start Date <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="start_date" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Scheduled End Date <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="end_date" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-lg btn-block" id="submit_btn">
+                    <i class="fa fa-calendar-check"></i> Schedule Maintenance
+                </button>
+                <a href="{% url 'component_maintenance_list' %}" class="btn btn-secondary btn-lg btn-block">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fa fa-list-check"></i> Selected</h6>
+            </div>
+            <div class="card-body">
+                <div id="selected_preview">
+                    <p class="text-muted text-center">
+                        <i class="fa fa-arrow-left"></i><br>
+                        No components selected
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -198,102 +263,246 @@ Schedule Component Maintenance
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    let searchTimeout;
+    let allComponents = [];
+    let selectedIds = new Set();
     
-    // Component search functionality
-    $('#id_component_search').on('input', function() {
-        clearTimeout(searchTimeout);
-        const searchTerm = $(this).val();
-        const aircraftId = $('#id_aircraft').val();
-        const componentLevel = $('#id_component_level').val();
-        
-        if (!aircraftId || !componentLevel) {
-            alert('Please select an aircraft and component level first');
-            return;
-        }
-        
-        if (searchTerm.length < 2) {
-            $('#componentResults').hide();
-            return;
-        }
-        
-        searchTimeout = setTimeout(function() {
-            $.ajax({
-                url: '{% url "ajax_get_components_by_type" %}',
-                data: {
-                    'aircraft_id': aircraftId,
-                    'component_level': componentLevel,
-                    'search_term': searchTerm
-                },
-                success: function(data) {
-                    displayComponentResults(data.results);
-                }
-            });
-        }, 300);
-    });
-    
-    function displayComponentResults(results) {
-        const resultsDiv = $('#componentResults');
-        resultsDiv.empty();
-        
-        if (results.length === 0) {
-            resultsDiv.html('<div class="component-result-item">No components found</div>');
+    // Step 1: Aircraft selected
+    $('#aircraft_select').change(function() {
+        if ($(this).val()) {
+            $('#component_type_select').prop('disabled', false);
+            $('#step2').slideDown();
+            resetSteps(2);
         } else {
-            results.forEach(function(result) {
-                const item = $('<div class="component-result-item"></div>')
-                    .html(`
-                        <div class="component-name">${result.component_name}</div>
-                        <div class="component-details">
-                            Serial: ${result.serial_number} | 
-                            Maintenance Hours: ${result.maintenance_hours}
-                        </div>
-                    `)
-                    .data('result', result)
-                    .click(function() {
-                        selectComponent($(this).data('result'));
-                    });
-                resultsDiv.append(item);
-            });
-        }
-        
-        resultsDiv.show();
-    }
-    
-    function selectComponent(result) {
-        // Set hidden fields
-        $('#id_content_type_id').val(result.content_type_id);
-        $('#id_object_id').val(result.id);
-        
-        // Update search field
-        $('#id_component_search').val(`${result.component_name} - ${result.serial_number}`);
-        
-        // Show selected component info
-        $('#selectedComponentDetails').html(`
-            <p><strong>Component:</strong> ${result.component_name}</p>
-            <p><strong>Serial Number:</strong> ${result.serial_number}</p>
-            <p><strong>Current Maintenance Hours:</strong> ${result.maintenance_hours}</p>
-        `);
-        $('#selectedComponentInfo').show();
-        
-        // Hide results
-        $('#componentResults').hide();
-    }
-    
-    // Hide results when clicking outside
-    $(document).click(function(e) {
-        if (!$(e.target).closest('#component-search-container').length) {
-            $('#componentResults').hide();
+            resetSteps(1);
         }
     });
     
-    // Validate aircraft and level selection before allowing component search
-    $('#id_aircraft, #id_component_level').change(function() {
-        $('#id_component_search').val('');
-        $('#id_content_type_id').val('');
-        $('#id_object_id').val('');
-        $('#selectedComponentInfo').hide();
-        $('#componentResults').hide();
+    // Step 2: Component type selected
+    $('#component_type_select').change(function() {
+        if ($(this).val()) {
+            loadComponents();
+        } else {
+            resetSteps(2);
+        }
+    });
+    
+    // FIXED: Load components via AJAX with correct URL
+    function loadComponents() {
+        const aircraftId = $('#aircraft_select').val();
+        const componentType = $('#component_type_select').val();
+        
+        $('#step3').slideDown();
+        $('#components_loading').show();
+        $('#components_container, #no_components').hide();
+        
+        $.ajax({
+            // FIXED: Correct URL that matches urls.py
+            url: '/maintenance/ajax/components-by-type/',
+            data: {
+                aircraft_id: aircraftId,
+                component_type: componentType
+            },
+            success: function(data) {
+                $('#components_loading').hide();
+                
+                if (data.success && data.components && data.components.length > 0) {
+                    allComponents = data.components;
+                    renderComponents(data.components);
+                    $('#components_container').show();
+                    enableControls();
+                } else {
+                    $('#no_components').show();
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#components_loading').hide();
+                console.error('AJAX Error:', error);
+                alert('Error loading components: ' + error);
+            }
+        });
+    }
+    
+    // Render components as checkboxes
+    function renderComponents(components) {
+        let html = '';
+        
+        components.forEach(comp => {
+            const critical = comp.needs_maintenance ? 'critical' : '';
+            const badge = comp.needs_maintenance ? 
+                '<span class="critical-badge">⚠️ CRITICAL</span>' : '';
+            
+            html += `
+                <div class="component-checkbox ${critical}" data-component-id="${comp.id}">
+                    <label class="mb-0 d-block" style="cursor: pointer;">
+                        <input type="checkbox" name="selected_components" value="${comp.id}" 
+                               class="component-cb mr-2">
+                        <div class="component-info d-inline-block" style="width: 95%;">
+                            <strong>${comp.name}</strong> ${badge}<br>
+                            <small class="text-muted">
+                                SN: ${comp.serial_number} | PN: ${comp.part_number} | 
+                                <span class="${comp.maintenance_hours < 10 ? 'text-danger' : 'text-success'}">
+                                    ${comp.maintenance_hours} hrs
+                                </span>
+                            </small>
+                        </div>
+                    </label>
+                </div>
+            `;
+        });
+        
+        $('#components_list').html(html);
+        
+        $('.component-cb').change(function() {
+            updateSelection();
+            $(this).closest('.component-checkbox').toggleClass('selected', this.checked);
+        });
+    }
+    
+    // Update selection
+    function updateSelection() {
+        selectedIds.clear();
+        $('.component-cb:checked').each(function() {
+            selectedIds.add(parseInt($(this).val()));
+        });
+        
+        updatePreview();
+        
+        if (selectedIds.size > 0) {
+            $('#step4').slideDown();
+            $('#selected_count').text(selectedIds.size + ' selected').show();
+        } else {
+            $('#step4').hide();
+            $('#selected_count').hide();
+        }
+    }
+    
+    // Update sidebar preview
+    function updatePreview() {
+        if (selectedIds.size === 0) {
+            $('#selected_preview').html('<p class="text-muted text-center">No components selected</p>');
+            return;
+        }
+        
+        let html = `<p><strong>${selectedIds.size} component(s):</strong></p><div style="max-height: 400px; overflow-y: auto;">`;
+        
+        selectedIds.forEach(id => {
+            const comp = allComponents.find(c => c.id === id);
+            if (comp) {
+                const badge = comp.needs_maintenance ? 
+                    '<span class="badge badge-danger badge-sm">CRITICAL</span>' : '';
+                
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            ${badge}
+                            <strong>${comp.name}</strong><br>
+                            <small class="text-muted">
+                                ${comp.serial_number}<br>
+                                ${comp.maintenance_hours} hrs
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += '</div>';
+        $('#selected_preview').html(html);
+    }
+    
+    // Search functionality
+    $('#component_search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        
+        if (!searchTerm) {
+            $('.component-checkbox').show();
+            return;
+        }
+        
+        $('.component-checkbox').each(function() {
+            const text = $(this).text().toLowerCase();
+            if (text.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+    
+    $('#clear_search').click(function() {
+        $('#component_search').val('');
+        $('.component-checkbox').show();
+    });
+    
+    // Helper buttons
+    $('#select_all').click(function() {
+        $('.component-checkbox:visible input[type="checkbox"]').prop('checked', true);
+        $('.component-checkbox:visible').addClass('selected');
+        updateSelection();
+    });
+    
+    $('#clear_all').click(function() {
+        $('.component-cb').prop('checked', false);
+        $('.component-checkbox').removeClass('selected');
+        updateSelection();
+    });
+    
+    $('#filter_critical').click(function() {
+        $('.component-checkbox').hide();
+        $('.component-checkbox.critical').show();
+    });
+    
+    $('#filter_all').click(function() {
+        $('.component-checkbox').show();
+    });
+    
+    // Enable controls
+    function enableControls() {
+        $('#component_search, #clear_search, #select_all, #clear_all, #filter_critical, #filter_all').prop('disabled', false);
+    }
+    
+    // Reset steps
+    function resetSteps(fromStep) {
+        if (fromStep <= 2) {
+            $('#step3, #step4').hide();
+            $('#component_type_select').val('').prop('disabled', true);
+            selectedIds.clear();
+            allComponents = [];
+            $('.component-checkbox').removeClass('selected');
+        }
+        if (fromStep <= 3) {
+            $('#step4').hide();
+        }
+    }
+    
+    // Form submit validation
+    $('#maintenanceForm').submit(function(e) {
+        if (selectedIds.size === 0) {
+            e.preventDefault();
+            alert('Please select at least one component');
+            return false;
+        }
+        
+        const startDate = new Date($('[name="start_date"]').val());
+        const endDate = new Date($('[name="end_date"]').val());
+        
+        if (endDate <= startDate) {
+            e.preventDefault();
+            alert('End date must be after start date');
+            return false;
+        }
+        
+        if (selectedIds.size > 1) {
+            if (!confirm(`Schedule maintenance for ${selectedIds.size} components as a batch?`)) {
+                e.preventDefault();
+                return false;
+            }
+        }
+        
+        $('#submit_btn').html('<i class="fa fa-spinner fa-spin"></i> Scheduling...').prop('disabled', true);
+        return true;
     });
 });
 </script>
+
 {% endblock content %}
