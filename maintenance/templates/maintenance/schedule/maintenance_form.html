@@ -149,10 +149,10 @@ Schedule Component Maintenance
                             
                             <div class="row">
                                 <div class="col-md-6">
-                                    {{ form.maintenance_hours|as_crispy_field }}
+                                    
                                 </div>
                                 <div class="col-md-6">
-                                    {{ form.maintenance_hours_added|as_crispy_field }}
+                                   
                                 </div>
                             </div>
                             
@@ -167,13 +167,13 @@ Schedule Component Maintenance
                             
                             <div class="row">
                                 <div class="col-md-12">
-                                    {{ form.remarks|as_crispy_field }}
+                                    
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-12">
-                                    {{ form.maintenance_report|as_crispy_field }}
+                                    
                                 </div>
                             </div>
                         </div>
@@ -219,7 +219,7 @@ $(document).ready(function() {
         
         searchTimeout = setTimeout(function() {
             $.ajax({
-                url: '{% url "ajax_search_components" %}',
+                url: '{% url "ajax_get_components_by_type" %}',
                 data: {
                     'aircraft_id': aircraftId,
                     'component_level': componentLevel,

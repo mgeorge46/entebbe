@@ -11,104 +11,29 @@ from maintenance.models import (AircraftMaintenance, ComponentMaintenance)
 
 class ComponentMaintenanceForm(forms.ModelForm):
     """
-    Form for scheduling component maintenance with AJAX-powered search.
-    Works with all component types through ContentTypes framework.
+    FIXED: Scheduling form - NO completion fields
+    - Removed: maintenance_hours, maintenance_hours_added, remarks, maintenance_report
+    - These will be captured during sign-off/completion
     """
     
-    aircraft = forms.ModelChoiceField(
-        queryset=Aircraft.objects.all(),
-        required=True,
-        label="Aircraft",
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_aircraft'})
-    )
-    
-    component_level = forms.ChoiceField(
-        choices=[
-            ('', '--- Select Component Level ---'),
-            ('aircraftmaincomponent', 'Main Component (Level 0)'),
-            ('aircraftsubcomponent', 'Sub Component (Level 1)'),
-            ('aircraftsub2component', 'Sub2 Component (Level 2)'),
-            ('aircraftsub3component', 'Sub3 Component (Level 3)'),
-        ],
-        required=True,
-        label="Component Level",
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_component_level'})
-    )
-    
-    component_search = forms.CharField(
-        required=False,
-        label="Search Component",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_component_search',
-            'placeholder': 'Type component name or serial number...',
-            'autocomplete': 'off'
-        })
-    )
-    
-    content_type_id = forms.IntegerField(
-        widget=forms.HiddenInput(attrs={'id': 'id_content_type_id'}),
-        required=True
-    )
-    
-    object_id = forms.IntegerField(
-        widget=forms.HiddenInput(attrs={'id': 'id_object_id'}),
-        required=True
-    )
-
     class Meta:
         model = ComponentMaintenance
+        # FIXED: Only these 4 fields for scheduling
         fields = [
             'main_type_schedule',
             'maintenance_type',
-            'maintenance_hours',
-            'maintenance_hours_added',
             'start_date',
             'end_date',
-            'remarks',
-            'maintenance_report'
         ]
         widgets = {
             'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'main_type_schedule': forms.Select(attrs={'class': 'form-control'}),
             'maintenance_type': forms.Select(attrs={'class': 'form-control'}),
-            'maintenance_hours': forms.NumberInput(attrs={'class': 'form-control'}),
-            'maintenance_hours_added': forms.NumberInput(attrs={'class': 'form-control'}),
-            'maintenance_report': forms.FileInput(attrs={'class': 'form-control'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        if self.instance and self.instance.pk:
-            self.fields['aircraft'].initial = self._get_aircraft_from_instance()
-            self.fields['component_level'].initial = self.instance.content_type.model
-            self.fields['component_search'].initial = str(self.instance.component_to_maintain)
-            self.fields['content_type_id'].initial = self.instance.content_type_id
-            self.fields['object_id'].initial = self.instance.object_id
-
-    def _get_aircraft_from_instance(self):
-        component = self.instance.component_to_maintain
-        if hasattr(component, 'aircraft_attached'):
-            return component.aircraft_attached
-        elif hasattr(component, 'parent_component'):
-            return component.parent_component.aircraft_attached
-        elif hasattr(component, 'parent_sub_component'):
-            return component.parent_sub_component.parent_component.aircraft_attached
-        elif hasattr(component, 'parent_sub2_component'):
-            return component.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached
-        return None
-
+    
     def clean(self):
         cleaned_data = super().clean()
-        
-        if not cleaned_data.get('content_type_id'):
-            raise forms.ValidationError("Please select a component to maintain.")
-        
-        if not cleaned_data.get('object_id'):
-            raise forms.ValidationError("Please select a valid component.")
         
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
@@ -118,29 +43,165 @@ class ComponentMaintenanceForm(forms.ModelForm):
         
         return cleaned_data
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.content_type_id = self.cleaned_data['content_type_id']
-        instance.object_id = self.cleaned_data['object_id']
+
+
+class BatchComponentMaintenanceCompletionForm(forms.Form):
+    """Batch sign-off form"""
+    
+    actual_end_date = forms.DateTimeField(
+        required=True,
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'form-control'
+        }),
+        label="Batch Completion Date"
+    )
+    
+    hours_added = forms.DecimalField(
+        required=True,
+        min_value=0,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'id': 'hours_input'
+        }),
+        label="Hours to Add to EACH Component"
+    )
+    
+    completion_remarks = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 5
+        }),
+        label="Batch Completion Remarks"
+    )
+    
+    completion_report = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control-file'
+        }),
+        label="Batch Report (optional)"
+    )
+
+
+class ComponentMaintenanceCompletionForm(forms.Form):
+    """
+    NEW: Completion form used by complete_component_maintenance view
+    This is where hours_added, remarks, and report are captured
+    """
+    
+    actual_start_date = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'form-control'
+        }),
+        label="Actual Start Date (optional)"
+    )
+    
+    actual_end_date = forms.DateTimeField(
+        required=True,
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'form-control'
+        }),
+        label="Actual Completion Date",
+        help_text="When was the maintenance actually completed?"
+    )
+    
+    actual_hours_added = forms.DecimalField(
+        required=True,
+        min_value=0,
+        max_digits=10,
+        decimal_places=2,
+        initial=0,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01',
+            'min': '0'
+        }),
+        label="Hours to Add Back to Component",
+        help_text="Maintenance hours to add to this component"
+    )
+    
+    completion_remarks = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 5,
+            'placeholder': 'Describe work performed, parts replaced, findings...'
+        }),
+        label="Completion Remarks",
+        help_text="Document what was actually done"
+    )
+    
+    completion_report = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control-file',
+            'accept': '.pdf,.doc,.docx,.xlsx,.xls,.jpg,.png'
+        }),
+        label="Upload Completion Report (optional)"
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        actual_start = cleaned_data.get('actual_start_date')
+        actual_end = cleaned_data.get('actual_end_date')
         
-        if commit:
-            instance.save()
+        if actual_start and actual_end and actual_end <= actual_start:
+            raise forms.ValidationError("Actual end must be after actual start.")
         
-        return instance
+        return cleaned_data
+
 
 class BulkComponentMaintenanceConfirmForm(forms.Form):
     """Form for bulk confirmation of multiple maintenances"""
     
     maintenance_ids = forms.CharField(widget=forms.HiddenInput(), required=True)
     
-    confirmation_notes = forms.CharField(
+    actual_end_date = forms.DateTimeField(
+        required=True,
+        widget=forms.DateTimeInput(attrs={
+            'type': 'datetime-local',
+            'class': 'form-control'
+        }),
+        label="Batch Completion Date"
+    )
+    
+    hours_added = forms.DecimalField(
+        required=True,
+        min_value=0,
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'step': '0.01'
+        }),
+        label="Hours to Add to Each Component"
+    )
+    
+    completion_remarks = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'rows': 3,
-            'placeholder': 'Add any notes about this confirmation...'
+            'rows': 5,
+            'placeholder': 'Describe work performed across all components...'
         }),
+        required=True,
+        label="Batch Completion Remarks"
+    )
+    
+    completion_report = forms.FileField(
         required=False,
-        label="Confirmation Notes"
+        widget=forms.FileInput(attrs={
+            'class': 'form-control-file',
+            'accept': '.pdf,.doc,.docx,.xlsx,.xls'
+        }),
+        label="Upload Batch Completion Report"
     )
     
     def clean_maintenance_ids(self):
@@ -149,7 +210,7 @@ class BulkComponentMaintenanceConfirmForm(forms.Form):
             return [int(id.strip()) for id in ids.split(',') if id.strip()]
         except ValueError:
             raise forms.ValidationError("Invalid maintenance IDs.")
-
+        
 # ==============================================================================
 # END OF ADDITIONS TO forms.py
 # ==============================================================================

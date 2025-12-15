@@ -16,6 +16,35 @@
         background-color: #d1ecf1 !important;
     }
     
+    /* FIXED: Better status badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .status-scheduled {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .status-in-progress {
+        background: #17a2b8;
+        color: white;
+    }
+    
+    .status-expired {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .status-completed {
+        background: #28a745;
+        color: white;
+    }
+    
     .batch-badge {
         padding: 4px 10px;
         border-radius: 12px;
@@ -37,23 +66,6 @@
     .batch-auto {
         background-color: #17a2b8;
         color: white;
-    }
-    
-    .schedule-badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .badge-manual {
-        background-color: #ffc107;
-        color: #000;
-    }
-    
-    .badge-automated {
-        background-color: #17a2b8;
-        color: #fff;
     }
     
     .component-level-badge {
@@ -113,7 +125,7 @@
                     <option value="">All Batches</option>
                     {% for batch_id in batch_ids %}
                     <option value="{{ batch_id }}" {% if request.GET.batch_id == batch_id %}selected{% endif %}>
-                        {{ batch_id }}
+                        {{ batch_id|slice:"-10:" }}
                     </option>
                     {% endfor %}
                 </select>
@@ -195,10 +207,42 @@
     </div>
 </div>
 
+<!-- FIXED: Status Tabs with corrected logic -->
+<div class="card mb-3">
+    <div class="card-body">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a href="?status=scheduled" class="nav-link {% if status == 'scheduled' %}active{% endif %}">
+                    <i class="fa fa-calendar"></i> Scheduled ({{ scheduled_count }})
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?status=expired" class="nav-link {% if status == 'expired' %}active{% endif %}">
+                    <i class="fa fa-exclamation-triangle"></i> Expired/Unconfirmed ({{ expired_count }})
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="?status=completed" class="nav-link {% if status == 'completed' %}active{% endif %}">
+                    <i class="fa fa-check-circle"></i> Historical/Completed ({{ completed_count }})
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
 <!-- Maintenance Schedules Table -->
 <div class="card">
     <div class="card-header">
-        <h6 class="mb-0">Maintenance Schedules ({{ page_obj.paginator.count }} total)</h6>
+        <h6 class="mb-0">
+            {% if status == 'scheduled' %}
+                📅 Future Scheduled Maintenances
+            {% elif status == 'expired' %}
+                ⚠️ Expired & Awaiting Confirmation
+            {% else %}
+                ✅ Historical & Completed Maintenances
+            {% endif %}
+            ({{ page_obj.paginator.count }} total)
+        </h6>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -207,12 +251,14 @@
                     <tr>
                         <th>Batch/ID</th>
                         <th>Component</th>
+                        <th>S/N</th>
                         <th>Level</th>
-                        <th>Aircraft</th>
                         <th>Type</th>
                         <th>Schedule</th>
                         <th>Start Date</th>
+                        <th>End Date</th>
                         <th>Hours</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -243,51 +289,84 @@
                             {% endif %}
                         </td>
                         <td>
-                            <strong>{{ schedule.component_to_maintain.component_name }}</strong><br>
-                            <small class="text-muted">{{ schedule.component_to_maintain.serial_number }}</small>
+                            <strong>{{ schedule.component_to_maintain.component_name }}</strong>
+                        </td>
+                        <td>
+                            <small>{{ schedule.component_to_maintain.serial_number }}</small>
                         </td>
                         <td>
                             <span class="component-level-badge level-{{ schedule.component_hierarchy_level }}">
                                 L{{ schedule.component_hierarchy_level }}
                             </span>
                         </td>
-                        <td>
-                            {% if schedule.is_main_component %}
-                                {{ schedule.component_to_maintain.aircraft_attached.abbreviation }}
-                            {% elif schedule.is_sub_component %}
-                                {{ schedule.component_to_maintain.parent_component.aircraft_attached.abbreviation }}
-                            {% elif schedule.is_sub2_component %}
-                                {{ schedule.component_to_maintain.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
-                            {% elif schedule.is_sub3_component %}
-                                {{ schedule.component_to_maintain.parent_sub2_component.parent_sub_component.parent_component.aircraft_attached.abbreviation }}
-                            {% endif %}
-                        </td>
                         <td>{{ schedule.get_maintenance_type_display }}</td>
                         <td>
-                            <span class="schedule-badge {% if schedule.main_type_schedule == 'Operational' %}badge-manual{% else %}badge-automated{% endif %}">
-                                {% if schedule.main_type_schedule == 'Operational' %}Manual{% else %}Auto{% endif %}
-                            </span>
+                            {% if schedule.main_type_schedule == 'Operational' %}
+                                <span class="badge badge-warning">Manual</span>
+                            {% else %}
+                                <span class="badge badge-info">Auto</span>
+                            {% endif %}
                         </td>
                         <td>{{ schedule.start_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ schedule.end_date|date:"Y-m-d H:i" }}</td>
                         <td>
                             <small>Current:</small> {{ schedule.maintenance_hours }}<br>
-                            <small>Add:</small> +{{ schedule.maintenance_hours_added }}
+                            <small class="text-muted">Will add: {{ schedule.maintenance_hours_added }}</small>
+                        </td>
+                        <td>
+                            <!-- FIXED: Display proper status based on current logic -->
+                            {% if status == 'scheduled' %}
+                                <span class="status-badge status-scheduled">Scheduled</span>
+                            {% elif status == 'expired' %}
+                                <span class="status-badge status-expired">⚠️ Expired</span>
+                            {% else %}
+                                <span class="status-badge status-completed">✓ Completed</span>
+                            {% endif %}
                         </td>
                         <td>
                             <a href="{% url 'component_maintenance_detail' schedule.pk %}" 
                                class="btn btn-sm btn-info" title="View Details">
                                 <i class="fa fa-eye"></i>
                             </a>
-                            <a href="{% url 'component_maintenance_update' schedule.pk %}" 
-                               class="btn btn-sm btn-warning" title="Edit">
-                                <i class="fa fa-edit"></i>
-                            </a>
+                            
+                            <!-- FIXED: Appropriate actions based on status -->
+                            {% if status == 'scheduled' %}
+                                <!-- Future scheduled - allow edit and sign-off -->
+                                <a href="{% url 'component_maintenance_update' schedule.pk %}" 
+                                   class="btn btn-sm btn-warning" title="Edit Schedule">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                <a href="{% url 'complete_component_maintenance' schedule.pk %}" 
+                                   class="btn btn-sm btn-success" title="Sign Off">
+                                    <i class="fa fa-check-circle"></i>
+                                </a>
+                            {% elif status == 'expired' %}
+                                <!-- Expired - allow reschedule AND sign-off -->
+                                <a href="{% url 'component_maintenance_update' schedule.pk %}" 
+                                   class="btn btn-sm btn-warning" title="Reschedule">
+                                    <i class="fa fa-calendar"></i>
+                                </a>
+                                <a href="{% url 'complete_component_maintenance' schedule.pk %}" 
+                                   class="btn btn-sm btn-danger" title="Complete (Overdue)">
+                                    <i class="fa fa-check-double"></i>
+                                </a>
+                            {% else %}
+                                <!-- Completed - view only -->
+                                <span class="text-muted"><small>Completed</small></span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center text-muted">
-                            <i class="fa fa-info-circle"></i> No component maintenance schedules found
+                        <td colspan="11" class="text-center text-muted">
+                            <i class="fa fa-info-circle"></i> 
+                            {% if status == 'scheduled' %}
+                                No future scheduled maintenances found
+                            {% elif status == 'expired' %}
+                                No expired/unconfirmed maintenances found
+                            {% else %}
+                                No completed maintenances found
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -325,5 +404,19 @@
         {% endif %}
     </div>
 </div>
+
+<!-- FIXED: Help text for expired items -->
+{% if status == 'expired' %}
+<div class="alert alert-warning">
+    <h6><i class="fa fa-info-circle"></i> Expired Maintenances</h6>
+    <p class="mb-0">
+        These maintenances have passed their due date but haven't been signed off yet. You can:
+        <ul>
+            <li><strong>Reschedule</strong> - Set new dates if maintenance hasn't started</li>
+            <li><strong>Complete (Overdue)</strong> - Sign off if maintenance was done but not recorded</li>
+        </ul>
+    </p>
+</div>
+{% endif %}
 
 {% endblock content %}

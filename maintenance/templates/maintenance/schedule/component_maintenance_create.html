@@ -36,8 +36,14 @@
         background: #f0f0f0;
     }
     
-    .component-checkbox input[type="checkbox"]:checked + .component-info {
+    /* FIXED: Support selected state */
+    .component-checkbox.selected {
         background: #d4edda;
+        border-color: #28a745;
+    }
+    
+    .component-checkbox input[type="checkbox"]:checked ~ .component-info {
+        font-weight: bold;
     }
     
     .component-checkbox.critical {
@@ -64,7 +70,7 @@
 
 <div class="row">
     <div class="col-lg-9">
-        <form method="POST" enctype="multipart/form-data" id="maintenanceForm">
+        <form method="POST" id="maintenanceForm">
             {% csrf_token %}
             
             <!-- STEP 1: Select Aircraft -->
@@ -102,12 +108,12 @@
                 </select>
             </div>
             
-            <!-- STEP 3: Select Components with Search -->
+            <!-- STEP 3: FIXED - Multi-Select Components with Search -->
             <div class="step-section" id="step3" style="display:none;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <span class="step-number">3</span>
-                        <strong>Select Components</strong>
+                        <strong>Select Components (Multiple Allowed)</strong>
                         <span class="selected-badge ml-2" id="selected_count" style="display:none;">0 selected</span>
                     </div>
                 </div>
@@ -149,8 +155,12 @@
                     <p class="mt-3">Loading components...</p>
                 </div>
                 
-                <!-- Components List (Checkboxes) -->
+                <!-- FIXED: Components List with Multi-Selection Support -->
                 <div id="components_container" style="display:none;">
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>Batch Mode:</strong> Select multiple components to schedule them together with the same maintenance window.
+                    </div>
                     <div id="components_list" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
                         <!-- Components will be loaded here via AJAX -->
                     </div>
@@ -163,11 +173,16 @@
                 </div>
             </div>
             
-            <!-- STEP 4: Maintenance Details -->
+            <!-- STEP 4: FIXED - Simplified Maintenance Details (No hours_added, remarks, report) -->
             <div class="step-section" id="step4" style="display:none;">
                 <div class="mb-3">
                     <span class="step-number">4</span>
-                    <strong>Maintenance Details</strong>
+                    <strong>Maintenance Schedule Details</strong>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <strong>Note:</strong> Completion details (hours added, remarks, report) will be captured when you <strong>sign off</strong> the maintenance.
                 </div>
                 
                 <div class="row">
@@ -211,15 +226,6 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label>Maintenance Plan/Remarks <span class="text-danger">*</span></label>
-                    <textarea name="remarks" class="form-control" rows="4" 
-                              placeholder="Describe the planned maintenance work..." required></textarea>
-                    <small class="text-muted">
-                        <i class="fa fa-info-circle"></i> Note: Hours will be added when you sign-off/complete the maintenance
-                    </small>
-                </div>
-                
                 <button type="submit" class="btn btn-success btn-lg btn-block" id="submit_btn">
                     <i class="fa fa-calendar-check"></i> Schedule Maintenance
                 </button>
@@ -234,7 +240,7 @@
     <div class="col-lg-3">
         <div class="card sticky-top" style="top: 20px;">
             <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><i class="fa fa-list-check"></i> Selected</h6>
+                <h6 class="mb-0"><i class="fa fa-list-check"></i> Selected Components</h6>
             </div>
             <div class="card-body">
                 <div id="selected_preview">
@@ -308,7 +314,7 @@ $(document).ready(function() {
         });
     }
     
-    // Render components as checkboxes
+    // FIXED: Render components as CHECKBOXES for multi-selection
     function renderComponents(components) {
         let html = '';
         
@@ -319,7 +325,7 @@ $(document).ready(function() {
             
             html += `
                 <div class="component-checkbox ${critical}" data-component-id="${comp.id}">
-                    <label class="mb-0 d-block">
+                    <label class="mb-0 d-block" style="cursor: pointer;">
                         <input type="checkbox" name="selected_components" value="${comp.id}" 
                                class="component-cb mr-2">
                         <div class="component-info d-inline-block" style="width: 95%;">
@@ -338,11 +344,15 @@ $(document).ready(function() {
         
         $('#components_list').html(html);
         
-        // Attach change event
-        $('.component-cb').change(updateSelection);
+        // FIXED: Attach change event to update selection
+        $('.component-cb').change(function() {
+            updateSelection();
+            // Visual feedback
+            $(this).closest('.component-checkbox').toggleClass('selected', this.checked);
+        });
     }
     
-    // Update selection
+    // FIXED: Update selection tracking
     function updateSelection() {
         selectedIds.clear();
         $('.component-cb:checked').each(function() {
@@ -421,11 +431,13 @@ $(document).ready(function() {
     // Helper buttons
     $('#select_all').click(function() {
         $('.component-checkbox:visible input[type="checkbox"]').prop('checked', true);
+        $('.component-checkbox:visible').addClass('selected');
         updateSelection();
     });
     
     $('#clear_all').click(function() {
         $('.component-cb').prop('checked', false);
+        $('.component-checkbox').removeClass('selected');
         updateSelection();
     });
     
@@ -450,6 +462,7 @@ $(document).ready(function() {
             $('#component_type_select').val('').prop('disabled', true);
             selectedIds.clear();
             allComponents = [];
+            $('.component-checkbox').removeClass('selected');
         }
         if (fromStep <= 3) {
             $('#step4').hide();
@@ -474,7 +487,7 @@ $(document).ready(function() {
         }
         
         if (selectedIds.size > 1) {
-            if (!confirm(`Schedule maintenance for ${selectedIds.size} components?`)) {
+            if (!confirm(`Schedule maintenance for ${selectedIds.size} components as a batch?`)) {
                 e.preventDefault();
                 return false;
             }

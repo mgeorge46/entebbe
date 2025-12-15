@@ -31,7 +31,6 @@ from .views import (
     
     # Component Maintenance Scheduling Views
     ComponentMaintenanceListView,
-    component_maintenance_create,
     ComponentMaintenanceUpdateView,
     ComponentMaintenanceDetailView,
     
@@ -46,7 +45,6 @@ from .views import (
     complete_component_maintenance,
     batch_complete_maintenance,
     search_components_ajax,
-    component_maintenance_create_enhanced,
     confirm_component_maintenance,
     bulk_confirm_maintenances,
 )
@@ -139,8 +137,7 @@ urlpatterns = [
     path('component/schedule/update/<int:pk>/', ComponentMaintenanceUpdateView.as_view(), name='component_maintenance_update'),
     path('component/schedule/detail/<int:pk>/', ComponentMaintenanceDetailView.as_view(), name='component_maintenance_detail'),
     # Quick schedule from component detail page
-    path('component/<str:model_name>/<int:component_id>/quick-schedule/', quick_schedule_component_maintenance, 
-         name='quick_schedule_component'),
+    path('component/<str:model_name>/<int:component_id>/quick-schedule/', quick_schedule_component_maintenance, name='quick_schedule_component'),
     
     # Auto schedule (triggered when component reaches critical hours)
     path('component/<str:model_name>/<int:component_id>/auto-schedule/', auto_schedule_component_maintenance, name='auto_schedule_component'),
@@ -150,7 +147,7 @@ urlpatterns = [
     path('ajax/components-by-type/', get_components_by_aircraft_and_type, name='ajax_get_components_by_type'),
 
      #======================== Two state workflows ========================
-     path('component/schedule/create/', component_maintenance_create_enhanced, name='component_maintenance_create'),
+
      path('component/maintenance/<int:pk>/complete/', complete_component_maintenance, name='complete_component_maintenance'),
      path('batch/<str:batch_id>/complete/', batch_complete_maintenance, name='batch_complete_maintenance'),
      path('ajax/search-components/', search_components_ajax, name='ajax_search_components'),
